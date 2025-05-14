@@ -1,0 +1,4 @@
+#include "resource.h"
+
+SMAX_TRAY_ICON_INIT ICON "icons/RequestInitial.ico"
+SMAX_TRAY_ICON_ALERT ICON "icons/RequestNewItems.ico"
