@@ -16,12 +16,15 @@ smax_tray_client/
 ├── icons/
 │   ├── RequestInitial.ico
 │   └── RequestNewItems.ico
+├── Utils
+|   ├── Utils.cpp
+|   ├── Utils.h
+|   └── SimpleIni.h
 ├── Checker/
 |   ├── Checker.h
 |   ├── Checker.cpp
 |   ├── Requestor.h
 |   ├── Requestor.cpp
-|   └── SimpleIni.h
 └── TokenInitializer
     └── TokenDialog.rc
     └── TokenDialog.cpp
