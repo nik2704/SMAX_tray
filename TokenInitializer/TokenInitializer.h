@@ -6,12 +6,17 @@
 
 namespace smax {
 
+struct InputData {
+    wchar_t* username;
+    wchar_t* token;
+};
+
 class TokenInitializer {
 public:
     static void initializeToken(const std::wstring& iniPath);
 
 private:
-    static std::wstring promptInput(const std::wstring& message, const std::wstring& title);
+    static std::pair<std::wstring, std::wstring> TokenInitializer::promptInput();
 };
 
 } // namespace smax

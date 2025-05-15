@@ -20,8 +20,11 @@ void TokenInitializer::initializeToken(const std::wstring& iniPath) {
     const wchar_t* tokenValue = ini.GetValue(instance, L"token", NULL);
     if (!tokenValue || wcscmp(tokenValue, L"-init-") != 0) return;
 
-    std::wstring user = promptInput(L"Enter your username:", L"Authentication");
-    std::wstring token = promptInput(L"Enter your token:", L"Authentication");
+    auto [user, token] = promptInput();
+    if (user.empty() || token.empty()) {
+        MessageBoxW(NULL, L"Username or token was not provided.", L"Warning", MB_ICONWARNING);
+        return;
+    }
 
     if (user.empty() || token.empty()) {
         MessageBoxW(NULL, L"Username or token was not provided.", L"Warning", MB_ICONWARNING);
@@ -41,19 +44,51 @@ void TokenInitializer::initializeToken(const std::wstring& iniPath) {
     }
 }
 
+// INT_PTR CALLBACK InputDlgProc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam) {
+//     static wchar_t* outBuffer = nullptr;
+//     switch (msg) {
+//         case WM_INITDIALOG:
+//             outBuffer = reinterpret_cast<wchar_t*>(lParam);
+//             SetDlgItemTextW(hwndDlg, 1001, L"");
+//             return TRUE;
+//         case WM_COMMAND:
+//             switch (LOWORD(wParam)) {
+//                 case IDOK:
+//                     GetDlgItemTextW(hwndDlg, 1001, outBuffer, 256);
+//                     EndDialog(hwndDlg, IDOK);
+//                     return TRUE;
+//                 case IDCANCEL:
+//                     EndDialog(hwndDlg, IDCANCEL);
+//                     return TRUE;
+//             }
+//             break;
+//     }
+//     return FALSE;
+// }
+
 INT_PTR CALLBACK InputDlgProc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam) {
-    static wchar_t* outBuffer = nullptr;
+    static InputData* input = nullptr;
     switch (msg) {
         case WM_INITDIALOG:
-            outBuffer = reinterpret_cast<wchar_t*>(lParam);
+            input = reinterpret_cast<InputData*>(lParam);
             SetDlgItemTextW(hwndDlg, 1001, L"");
+            SetDlgItemTextW(hwndDlg, 1002, L"");
             return TRUE;
         case WM_COMMAND:
             switch (LOWORD(wParam)) {
-                case IDOK:
-                    GetDlgItemTextW(hwndDlg, 1001, outBuffer, 256);
+                case IDOK: {
+                    wchar_t userBuf[256], tokenBuf[256];
+                    GetDlgItemTextW(hwndDlg, 1001, userBuf, 256);
+                    GetDlgItemTextW(hwndDlg, 1002, tokenBuf, 256);
+                    if (wcslen(userBuf) == 0 || wcslen(tokenBuf) == 0) {
+                        MessageBoxW(hwndDlg, L"Both username and token must be provided.", L"Warning", MB_ICONWARNING);
+                        return TRUE;
+                    }
+                    wcscpy_s(input->username, 256, userBuf);
+                    wcscpy_s(input->token, 256, tokenBuf);
                     EndDialog(hwndDlg, IDOK);
                     return TRUE;
+                }
                 case IDCANCEL:
                     EndDialog(hwndDlg, IDCANCEL);
                     return TRUE;
@@ -63,18 +98,33 @@ INT_PTR CALLBACK InputDlgProc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lPar
     return FALSE;
 }
 
-std::wstring TokenInitializer::promptInput(const std::wstring& message, const std::wstring& title) {
+// std::wstring TokenInitializer::promptInput(const std::wstring& message, const std::wstring& title) {
+//     const int bufSize = 256;
+//     wchar_t buffer[bufSize] = {};
+
+//     HINSTANCE hInstance = GetModuleHandleW(NULL);
+//     INT_PTR result = DialogBoxParamW(hInstance, MAKEINTRESOURCE(101), NULL, InputDlgProc, reinterpret_cast<LPARAM>(buffer));
+
+//     if (result == IDOK) {
+//         return buffer;
+//     }
+
+//     return L"";
+// }
+std::pair<std::wstring, std::wstring> TokenInitializer::promptInput() {
     const int bufSize = 256;
-    wchar_t buffer[bufSize] = {};
+    wchar_t usernameBuf[bufSize] = {};
+    wchar_t tokenBuf[bufSize] = {};
+    InputData data = { usernameBuf, tokenBuf };
 
     HINSTANCE hInstance = GetModuleHandleW(NULL);
-    INT_PTR result = DialogBoxParamW(hInstance, MAKEINTRESOURCE(101), NULL, InputDlgProc, reinterpret_cast<LPARAM>(buffer));
+    INT_PTR result = DialogBoxParamW(hInstance, MAKEINTRESOURCE(101), NULL, InputDlgProc, reinterpret_cast<LPARAM>(&data));
 
     if (result == IDOK) {
-        return buffer;
+        return { usernameBuf, tokenBuf };
     }
 
-    return L"";
+    return { L"", L"" };
 }
 
 } // namespace smax

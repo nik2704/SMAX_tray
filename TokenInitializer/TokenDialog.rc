@@ -1,12 +1,16 @@
 #include <windows.h>
 
-101 DIALOGEX 0, 0, 260, 100
+101 DIALOGEX 0, 0, 260, 120
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Input"
+CAPTION "Authentication"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Enter value:", -1, 10, 10, 240, 8
-    EDITTEXT        1001, 10, 30, 240, 14, ES_AUTOHSCROLL
-    DEFPUSHBUTTON   "OK", IDOK, 110, 60, 50, 14
-    PUSHBUTTON      "Cancel", IDCANCEL, 170, 60, 50, 14
+    LTEXT           "Username:", -1, 10, 10, 240, 8
+    EDITTEXT        1001, 10, 20, 240, 14, ES_AUTOHSCROLL
+
+    LTEXT           "Token:", -1, 10, 40, 240, 8
+    EDITTEXT        1002, 10, 50, 240, 14, ES_AUTOHSCROLL | ES_PASSWORD
+
+    DEFPUSHBUTTON   "OK", IDOK, 110, 90, 50, 14
+    PUSHBUTTON      "Cancel", IDCANCEL, 170, 90, 50, 14
 END

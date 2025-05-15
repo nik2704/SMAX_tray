@@ -19,37 +19,9 @@
  * @param nCmdShow Controls how the window is to be shown (unused here).
  * @return Application exit code.
  */
-INT_PTR CALLBACK InputDlgProc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam) {
-    static wchar_t* outBuffer = nullptr;
-    switch (msg) {
-        case WM_INITDIALOG:
-            outBuffer = reinterpret_cast<wchar_t*>(lParam);
-            SetDlgItemTextW(hwndDlg, 1001, L"");
-            return TRUE;
-        case WM_COMMAND:
-            switch (LOWORD(wParam)) {
-                case IDOK:
-                    GetDlgItemTextW(hwndDlg, 1001, outBuffer, 256);
-                    EndDialog(hwndDlg, IDOK);
-                    return TRUE;
-                case IDCANCEL:
-                    EndDialog(hwndDlg, IDCANCEL);
-                    return TRUE;
-            }
-            break;
-    }
-    return FALSE;
-}
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
 wchar_t buffer[256] = {};
-    // INT_PTR res = DialogBoxParamW(hInstance, MAKEINTRESOURCE(101), NULL, InputDlgProc, reinterpret_cast<LPARAM>(buffer));
-    // if (res == IDOK) {
-    //     MessageBoxW(NULL, buffer, L"Input Received", MB_OK);
-    // } else {
-    //     MessageBoxW(NULL, L"Dialog cancelled or failed", L"Info", MB_OK);
-    // }
-
     // Encrypts token if it has the value "-init-"
     smax::TokenInitializer::initializeToken(L"config.ini");
 
