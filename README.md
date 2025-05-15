@@ -16,12 +16,16 @@ smax_tray_client/
 ├── icons/
 │   ├── RequestInitial.ico
 │   └── RequestNewItems.ico
-└── Checker/
-    ├── Checker.h
-    ├── Checker.cpp
-    ├── Requestor.h
-    ├── Requestor.cpp
-    └── SimpleIni.h
+├── Checker/
+|   ├── Checker.h
+|   ├── Checker.cpp
+|   ├── Requestor.h
+|   ├── Requestor.cpp
+|   └── SimpleIni.h
+└── TokenInitializer
+    └── TokenDialog.rc
+    └── TokenDialog.cpp
+    └── TokenDialog.h
 ```
 
 ---
@@ -29,6 +33,7 @@ smax_tray_client/
 ## ✨ Features
 
 - 🖥️ Runs silently in the Windows system tray.
+- 🔒 checks the value of a token for an instance and in case of '-init' requests this information and encrypts the token.
 - 🌐 Periodically polls a REST API for new service requests.
 - 🔔 Displays Windows notifications for new or unacknowledged items.
 - 🔒 Authenticates via username and token.
@@ -49,15 +54,16 @@ period=60
 hostname=hostname_shared
 tenantId=actual_tenant_id_shared
 filter="Active=true and OwnedByPerson='id_of_the_user'"
-userName=actual_username_shared
-token=actual_personal_access_token_shared
+token=-init-
+; actual_personal_access_encrypted_token_customer1. init => request user to provide the token
 
 [CUSTOMER1]
 hostname=hostname_customer1
 tenantId=actual_tenant_id_customer1
 filter="Active=true and OwnedByPerson='id_of_the_user'"
 userName=actual_username_customer1
-token=actual_personal_access_token_customer1
+Stoken=-init-
+; actual_personal_access_encrypted_token_customer1. init => request user to provide the token
 
 ```
 

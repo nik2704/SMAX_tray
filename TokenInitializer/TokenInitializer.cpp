@@ -1,7 +1,7 @@
 #include "TokenInitializer.h"
 #include "..\Utils\Utils.h"
 #include <Shlwapi.h>
-#include <windowsx.h> // для удобных макросов
+#include <windowsx.h>
 #pragma comment(lib, "Shlwapi.lib")
 
 namespace smax {
@@ -36,35 +36,13 @@ void TokenInitializer::initializeToken(const std::wstring& iniPath) {
 
     std::string tokenEncrypted = encrypt(wideToUtf8(token));
     std::string tokenHex = toHex(tokenEncrypted);
-    std::wstring valueToken(tokenHex.begin(), tokenHex.end());  // Problem here
+    std::wstring valueToken(tokenHex.begin(), tokenHex.end());
     ini.SetValue(instance, L"token", valueToken.c_str());
 
     if (ini.SaveFile(iniPath.c_str()) < 0) {
         MessageBoxW(NULL, L"Failed to save config file.", L"Error", MB_ICONERROR);
     }
 }
-
-// INT_PTR CALLBACK InputDlgProc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam) {
-//     static wchar_t* outBuffer = nullptr;
-//     switch (msg) {
-//         case WM_INITDIALOG:
-//             outBuffer = reinterpret_cast<wchar_t*>(lParam);
-//             SetDlgItemTextW(hwndDlg, 1001, L"");
-//             return TRUE;
-//         case WM_COMMAND:
-//             switch (LOWORD(wParam)) {
-//                 case IDOK:
-//                     GetDlgItemTextW(hwndDlg, 1001, outBuffer, 256);
-//                     EndDialog(hwndDlg, IDOK);
-//                     return TRUE;
-//                 case IDCANCEL:
-//                     EndDialog(hwndDlg, IDCANCEL);
-//                     return TRUE;
-//             }
-//             break;
-//     }
-//     return FALSE;
-// }
 
 INT_PTR CALLBACK InputDlgProc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam) {
     static InputData* input = nullptr;
@@ -98,19 +76,6 @@ INT_PTR CALLBACK InputDlgProc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lPar
     return FALSE;
 }
 
-// std::wstring TokenInitializer::promptInput(const std::wstring& message, const std::wstring& title) {
-//     const int bufSize = 256;
-//     wchar_t buffer[bufSize] = {};
-
-//     HINSTANCE hInstance = GetModuleHandleW(NULL);
-//     INT_PTR result = DialogBoxParamW(hInstance, MAKEINTRESOURCE(101), NULL, InputDlgProc, reinterpret_cast<LPARAM>(buffer));
-
-//     if (result == IDOK) {
-//         return buffer;
-//     }
-
-//     return L"";
-// }
 std::pair<std::wstring, std::wstring> TokenInitializer::promptInput() {
     const int bufSize = 256;
     wchar_t usernameBuf[bufSize] = {};
