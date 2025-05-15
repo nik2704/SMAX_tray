@@ -1,6 +1,7 @@
 // Checker.cpp
 #include "Checker.h"
-#include "SimpleIni.h"
+#include "../Utils/SimpleIni.h"
+#include "../Utils/Utils.h"
 #include "Requestor.h"
 #include "..\resource.h"
 
@@ -161,7 +162,19 @@ void Checker::readConfig() {
     auto ini_tenantId = to_utf8(ini.GetValue(instance, L"tenantId", L""));
     filter_ = to_utf8(ini.GetValue(instance, L"filter", L""));
     userName_ = to_utf8(ini.GetValue(instance, L"userName", L""));
-    token_ = to_utf8(ini.GetValue(instance, L"token", L""));
+
+    const wchar_t* tokenHexW = ini.GetValue(instance, L"token", L"");
+    if (tokenHexW) {
+        std::string tokenHex;
+        size_t len = wcslen(tokenHexW);
+        tokenHex.reserve(len);
+        for (size_t i = 0; i < len; ++i) {
+            tokenHex.push_back(static_cast<char>(tokenHexW[i]));
+        }
+
+        std::string tokenEncrypted = fromHex(tokenHex);
+        token_ = encrypt(tokenEncrypted);
+    }
 
     url_ = "https://" + ini_hostname + "/rest/" + ini_tenantId + "/ems/Request?layout=Id";
     portalURL_ = "https://" + ini_hostname + "/saw/Requests?TENANTID=" + ini_tenantId;    
