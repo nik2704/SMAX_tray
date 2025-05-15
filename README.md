@@ -26,8 +26,8 @@ smax_tray_client/
 |   ├── Requestor.h
 |   └── Requestor.cpp
 └── TokenInitializer
-    └── TokenDialog.rc
-    └── TokenDialog.cpp
+    ├── TokenDialog.rc
+    ├── TokenDialog.cpp
     └── TokenDialog.h
 ```
 
