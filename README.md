@@ -1,6 +1,8 @@
 # 🛎️ SMAX Tray Client
 
-**SMAX Tray Client** is a lightweight Windows application that runs in the system tray and periodically monitors a request queue. When new requests appear, it notifies the user with a system tray notification.
+**SMAX Tray Client** is a lightweight Windows application that runs in the system tray and periodically monitors a request queue.
+Requests are selected by the criteria: should be Active and OwnedByPerson.Upn equals User Name.
+When new requests appear, it notifies the user with a system tray notification.
 
 ---
 
@@ -56,14 +58,12 @@ period=60
 [SHARED]
 hostname=hostname_shared
 tenantId=actual_tenant_id_shared
-filter="Active=true and OwnedByPerson='id_of_the_user'"
 token=-init-
 ; actual_personal_access_encrypted_token_customer1. init => request user to provide the token
 
 [CUSTOMER1]
 hostname=hostname_customer1
 tenantId=actual_tenant_id_customer1
-filter="Active=true and OwnedByPerson='id_of_the_user'"
 userName=actual_username_customer1
 Stoken=-init-
 ; actual_personal_access_encrypted_token_customer1. init => request user to provide the token
