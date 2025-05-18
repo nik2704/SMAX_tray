@@ -160,7 +160,6 @@ void Checker::readConfig() {
     
     auto ini_hostname = to_utf8(ini.GetValue(instance, L"hostname", L""));
     auto ini_tenantId = to_utf8(ini.GetValue(instance, L"tenantId", L""));
-    // filter_ = to_utf8(ini.GetValue(instance, L"filter", L""));
     userName_ = to_utf8(ini.GetValue(instance, L"userName", L""));
     filter_ = "Active=true and OwnedByPerson.Upn='" + userName_ + "'";
 
