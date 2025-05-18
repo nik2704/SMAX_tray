@@ -31,11 +31,11 @@ void TokenInitializer::initializeToken(const std::wstring& iniPath) {
         return;
     }
 
-    std::wstring valueUserName = std::wstring(user.begin(), user.end());
+    // std::wstring valueUserName = std::wstring(user.begin(), user.end());
+    auto valueUserName = getEncryptedString(std::move(user));
     ini.SetValue(instance, L"userName", valueUserName.c_str());
 
     auto valueToken = getEncryptedString(std::move(token));
-
     ini.SetValue(instance, L"token", valueToken.c_str());
 
     if (ini.SaveFile(iniPath.c_str()) < 0) {
