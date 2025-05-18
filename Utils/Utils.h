@@ -48,3 +48,11 @@ std::string fromHex(const std::string& hex);
  * @return std::wstring The encrypted data.
  */
 std::wstring getEncryptedString(std::wstring && strLine);
+
+/**
+ * @brief Decrypts a string using functions from the library.
+ * 
+ * @param strHexW The string to be decrypted.
+ * @return std::string The decrypted data.
+ */
+std::string getDecryptedString(const wchar_t* strHexW);

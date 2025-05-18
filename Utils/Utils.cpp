@@ -55,3 +55,21 @@ std::wstring getEncryptedString(std::wstring && strLine) {
 
     return valueStr;
 }
+
+std::string getDecryptedString(const wchar_t* strHexW) {
+    if (strHexW) {
+        std::string strHex;
+        size_t len = wcslen(strHexW);
+        strHex.reserve(len);
+        for (size_t i = 0; i < len; ++i) {
+            strHex.push_back(static_cast<char>(strHexW[i]));
+        }
+
+        std::string strEncrypted = fromHex(strHex);
+        auto result = encrypt(strEncrypted);
+
+        return result;
+    }
+
+    return "";
+}

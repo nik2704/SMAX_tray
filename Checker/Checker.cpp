@@ -163,18 +163,8 @@ void Checker::readConfig() {
     userName_ = to_utf8(ini.GetValue(instance, L"userName", L""));
     filter_ = "Active=true and OwnedByPerson.Upn='" + userName_ + "'";
 
-    const wchar_t* tokenHexW = ini.GetValue(instance, L"token", L"");
-    if (tokenHexW) {
-        std::string tokenHex;
-        size_t len = wcslen(tokenHexW);
-        tokenHex.reserve(len);
-        for (size_t i = 0; i < len; ++i) {
-            tokenHex.push_back(static_cast<char>(tokenHexW[i]));
-        }
-
-        std::string tokenEncrypted = fromHex(tokenHex);
-        token_ = encrypt(tokenEncrypted);
-    }
+    auto tokenHexW = ini.GetValue(instance, L"token", L"");
+    token_ = getDecryptedString(tokenHexW);
 
     url_ = "https://" + ini_hostname + "/rest/" + ini_tenantId + "/ems/Request?layout=Id";
     portalURL_ = "https://" + ini_hostname + "/saw/Requests?TENANTID=" + ini_tenantId;    
