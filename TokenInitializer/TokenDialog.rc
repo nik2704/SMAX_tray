@@ -14,3 +14,28 @@ BEGIN
     DEFPUSHBUTTON   "OK", IDOK, 110, 90, 50, 14
     PUSHBUTTON      "Cancel", IDCANCEL, 170, 90, 50, 14
 END
+
+102 DIALOGEX 0, 0, 260, 230
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Connection Settings"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Hostname:", -1, 10, 10, 240, 8
+    EDITTEXT        1001, 10, 20, 240, 14, ES_AUTOHSCROLL
+
+    LTEXT           "Tenant ID:", -1, 10, 35, 240, 8
+    EDITTEXT        1002, 10, 45, 240, 14, ES_AUTOHSCROLL
+
+    LTEXT           "Period (seconds):", -1, 10, 60, 240, 8
+    EDITTEXT        1003, 10, 70, 240, 14, ES_AUTOHSCROLL | ES_NUMBER
+
+    LTEXT           "Username:", -1, 10, 85, 240, 8
+    EDITTEXT        1004, 10, 95, 240, 14, ES_AUTOHSCROLL
+
+    LTEXT           "Token:", -1, 10, 110, 240, 8
+    EDITTEXT        1005, 10, 120, 240, 14, ES_AUTOHSCROLL | ES_PASSWORD
+
+    DEFPUSHBUTTON   "OK", IDOK, 110, 150, 50, 14
+    PUSHBUTTON      "Cancel", IDCANCEL, 170, 150, 50, 14
+END
+

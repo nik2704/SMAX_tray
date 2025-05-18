@@ -2,11 +2,83 @@
 #include "..\Utils\Utils.h"
 #include <Shlwapi.h>
 #include <windowsx.h>
+
 #pragma comment(lib, "Shlwapi.lib")
 
 namespace smax {
 
+
+INT_PTR CALLBACK FullInputDlgProc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam) {
+    static InputFullData* input = nullptr;
+
+    switch (msg) {
+        case WM_INITDIALOG:
+            input = reinterpret_cast<InputFullData*>(lParam);
+            return TRUE;
+
+        case WM_COMMAND:
+            switch (LOWORD(wParam)) {
+                case IDOK: {
+                    GetDlgItemTextW(hwndDlg, 1001, input->hostname, 256);
+                    GetDlgItemTextW(hwndDlg, 1002, input->tenant, 256);
+                    GetDlgItemTextW(hwndDlg, 1003, input->period, 256);
+                    GetDlgItemTextW(hwndDlg, 1004, input->username, 256);
+                    GetDlgItemTextW(hwndDlg, 1005, input->token, 256);
+
+                    if (wcslen(input->hostname) == 0 || wcslen(input->tenant) == 0 ||
+                        wcslen(input->period) == 0 || wcslen(input->username) == 0 ||
+                        wcslen(input->token) == 0) {
+                        MessageBoxW(hwndDlg, L"All fields are required.", L"Warning", MB_OK | MB_ICONWARNING);
+                        return TRUE;
+                    }
+
+                    EndDialog(hwndDlg, IDOK);
+                    return TRUE;
+                }
+
+                case IDCANCEL:
+                    EndDialog(hwndDlg, IDCANCEL);
+                    return TRUE;
+            }
+            break;
+    }
+
+    return FALSE;
+}
+
 void TokenInitializer::initializeToken(const std::wstring& iniPath) {
+    if (!PathFileExistsW(iniPath.c_str())) {
+        if (!generateINI(iniPath)) {
+            MessageBoxW(NULL, L"Configuration was not created.", L"Warning", MB_ICONWARNING);
+        }
+        return;
+    }
+
+    processINI(iniPath);
+}
+
+bool TokenInitializer::generateINI(const std::wstring& iniPath) {
+    HINSTANCE hInstance = GetModuleHandleW(NULL);
+    InputFullData data = {};
+
+    INT_PTR result = DialogBoxParamW(hInstance, MAKEINTRESOURCE(102), NULL, FullInputDlgProc, reinterpret_cast<LPARAM>(&data));
+    if (result != IDOK) return false;
+
+    CSimpleIniW ini;
+    ini.SetUnicode();
+
+    ini.SetValue(L"Settings", L"instance", data.tenant);
+    ini.SetValue(L"Settings", L"period", data.period);
+
+    ini.SetValue(data.tenant, L"hostname", data.hostname);
+    ini.SetValue(data.tenant, L"tenantId", data.tenant);
+    ini.SetValue(data.tenant, L"userName", getEncryptedString(data.username).c_str());
+    ini.SetValue(data.tenant, L"token", getEncryptedString(data.token).c_str());
+
+    return ini.SaveFile(iniPath.c_str()) >= 0;
+}
+
+void TokenInitializer::processINI(const std::wstring& iniPath) {
     CSimpleIniW ini;
     ini.SetUnicode();
     if (ini.LoadFile(iniPath.c_str()) < 0) {
@@ -26,12 +98,6 @@ void TokenInitializer::initializeToken(const std::wstring& iniPath) {
         return;
     }
 
-    if (user.empty() || token.empty()) {
-        MessageBoxW(NULL, L"Username or token was not provided.", L"Warning", MB_ICONWARNING);
-        return;
-    }
-
-    // std::wstring valueUserName = std::wstring(user.begin(), user.end());
     auto valueUserName = getEncryptedString(std::move(user));
     ini.SetValue(instance, L"userName", valueUserName.c_str());
 
@@ -48,8 +114,6 @@ INT_PTR CALLBACK InputDlgProc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lPar
     switch (msg) {
         case WM_INITDIALOG:
             input = reinterpret_cast<InputData*>(lParam);
-            SetDlgItemTextW(hwndDlg, 1001, L"");
-            SetDlgItemTextW(hwndDlg, 1002, L"");
             return TRUE;
         case WM_COMMAND:
             switch (LOWORD(wParam)) {
@@ -58,7 +122,7 @@ INT_PTR CALLBACK InputDlgProc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lPar
                     GetDlgItemTextW(hwndDlg, 1001, userBuf, 256);
                     GetDlgItemTextW(hwndDlg, 1002, tokenBuf, 256);
                     if (wcslen(userBuf) == 0 || wcslen(tokenBuf) == 0) {
-                        MessageBoxW(hwndDlg, L"Both username and token must be provided.", L"Warning", MB_ICONWARNING);
+                        MessageBoxW(hwndDlg, L"Both username and token must be provided.", L"Warning", MB_OK | MB_ICONWARNING);
                         return TRUE;
                     }
                     wcscpy_s(input->username, 256, userBuf);

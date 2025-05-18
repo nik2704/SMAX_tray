@@ -6,6 +6,14 @@
 
 namespace smax {
 
+struct InputFullData {
+    wchar_t hostname[256];
+    wchar_t tenant[256];
+    wchar_t period[256];
+    wchar_t username[256];
+    wchar_t token[256];
+};
+
 /**
  * @brief Structure to hold input data for username and token.
  */
@@ -31,6 +39,9 @@ public:
     static void initializeToken(const std::wstring& iniPath);
 
 private:
+    static bool generateINI(const std::wstring& iniPath);
+    static void processINI(const std::wstring& iniPath);
+
     /**
      * @brief Prompts the user for both username and token using a modal dialog.
      *

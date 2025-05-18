@@ -163,7 +163,6 @@ void Checker::readConfig() {
 
     auto userNameHexW = ini.GetValue(instance, L"userName", L"");
     userName_ = getDecryptedString(userNameHexW);
-    // userName_ = to_utf8(ini.GetValue(instance, L"userName", L""));
     filter_ = "Active=true and OwnedByPerson.Upn='" + userName_ + "'";
 
     auto tokenHexW = ini.GetValue(instance, L"token", L"");
