@@ -34,9 +34,8 @@ void TokenInitializer::initializeToken(const std::wstring& iniPath) {
     std::wstring valueUserName = std::wstring(user.begin(), user.end());
     ini.SetValue(instance, L"userName", valueUserName.c_str());
 
-    std::string tokenEncrypted = encrypt(wideToUtf8(token));
-    std::string tokenHex = toHex(tokenEncrypted);
-    std::wstring valueToken(tokenHex.begin(), tokenHex.end());
+    auto valueToken = getEncryptedString(std::move(token));
+
     ini.SetValue(instance, L"token", valueToken.c_str());
 
     if (ini.SaveFile(iniPath.c_str()) < 0) {

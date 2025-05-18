@@ -40,3 +40,11 @@ std::string toHex(const std::string& data);
  * @return std::string The original binary data.
  */
 std::string fromHex(const std::string& hex);
+
+/**
+ * @brief Encrypts a string using functions from the library.
+ * 
+ * @param strLine The string to be encrypted.
+ * @return std::wstring The encrypted data.
+ */
+std::wstring getEncryptedString(std::wstring && strLine);

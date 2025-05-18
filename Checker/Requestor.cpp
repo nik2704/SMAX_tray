@@ -12,7 +12,7 @@ namespace smax {
 
 std::string base64Encode(const std::string& input) {
     DWORD outputLength = 0;
-    // First call to get the required buffer size
+
     if (!CryptBinaryToStringA(reinterpret_cast<const BYTE*>(input.data()),
                               static_cast<DWORD>(input.size()),
                               CRYPT_STRING_BASE64 | CRYPT_STRING_NOCRLF,
@@ -30,7 +30,6 @@ std::string base64Encode(const std::string& input) {
         return {};
     }
 
-    // Trim the trailing null character if any
     if (!encoded.empty() && encoded.back() == '\0') {
         encoded.pop_back();
     }

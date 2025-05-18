@@ -46,3 +46,12 @@ std::string fromHex(const std::string& hex) {
     }
     return data;
 }
+
+std::wstring getEncryptedString(std::wstring && strLine) {
+    std::string tokenEncrypted = encrypt(wideToUtf8(strLine));
+    std::string strHex = toHex(tokenEncrypted);
+
+    std::wstring valueStr(strHex.begin(), strHex.end());
+
+    return valueStr;
+}
