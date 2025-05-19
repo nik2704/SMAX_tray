@@ -38,7 +38,9 @@ smax_tray_client/
 ## ✨ Features
 
 - 🖥️ Runs silently in the Windows system tray.
-- 🔒 checks the value of a token for an instance and in case of '-init' requests this information and encrypts the token.
+- 🔒 Creates an initial INI file in a dialog mode if there is no the INI file.
+- ⚙️ Allows to change settings in a dialog mode.
+- 🔒 Checks the value of a token for an instance and in case of '-init' requests this information and encrypts the token.
 - 🌐 Periodically polls a REST API for new service requests.
 - 🔔 Displays Windows notifications for new or unacknowledged items.
 - 🔒 Authenticates via username and token.

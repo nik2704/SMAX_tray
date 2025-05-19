@@ -6,6 +6,9 @@
 
 namespace smax {
 
+/**
+ * @brief Structure to hold input data to create an ini file.
+ */
 struct InputFullData {
     wchar_t hostname[256];
     wchar_t tenant[256];
@@ -38,8 +41,25 @@ public:
      */
     static void initializeToken(const std::wstring& iniPath);
 
+    /**
+     * @brief Updates information in the INI file.
+     *
+     * @param iniPath Full path to the INI file used for configuration.
+     */    static void UpdateINI(const std::wstring& iniPath);
+
 private:
+    /**
+     * @brief Runs a dialog to create the INI file.
+     *
+     * @param iniPath Full path to the INI file used for configuration.
+     */
     static bool generateINI(const std::wstring& iniPath);
+
+    /**
+     * @brief Processes the INI file to extract and update user credentials.
+     *
+     * @param iniPath Full path to the INI file used for configuration.
+     */    
     static void processINI(const std::wstring& iniPath);
 
     /**

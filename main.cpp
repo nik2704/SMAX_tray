@@ -5,7 +5,6 @@
 /// and starts the Windows message loop. On exit, the checker is properly shut down.
 
 #include "Checker/Checker.h"
-#include "TokenInitializer/TokenInitializer.h"
 
 /**
  * @brief Windows application entry point.
@@ -22,9 +21,6 @@
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
 wchar_t buffer[256] = {};
-    // Encrypts token if it has the value "-init-"
-    smax::TokenInitializer::initializeToken(L"config.ini");
-
     // Start the checker with the config file
     smax::Checker::getInstance().start(hInstance, L"config.ini");
 

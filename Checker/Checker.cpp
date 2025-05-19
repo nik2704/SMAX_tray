@@ -2,8 +2,9 @@
 #include "Checker.h"
 #include "../Utils/SimpleIni.h"
 #include "../Utils/Utils.h"
+#include "../TokenInitializer/TokenInitializer.h"
 #include "Requestor.h"
-#include "..\resource.h"
+#include "../resource.h"
 
 #include <boost/json.hpp>
 #include <shellapi.h>
@@ -24,9 +25,12 @@ PROCESS_INFORMATION pi;
 namespace json = boost::json;
 namespace smax {
 
-Checker* Checker::instance_ = nullptr;
-
 Checker& Checker::getInstance() {
+    static std::once_flag initFlag;
+    std::call_once(initFlag, []() {
+        TokenInitializer::initializeToken(L"config.ini");
+    });
+
     static Checker instance;
     return instance;
 }
@@ -83,14 +87,37 @@ void Checker::start(HINSTANCE hInstance, const std::wstring& iniFile) {
 
     running_ = true;
 
+    runWorker();
+}
+
+void Checker::runWorker() {
     worker_ = std::thread([this]() {
+        std::unique_lock<std::mutex> lock(mutex_);
         while (running_) {
+            lock.unlock();
             std::string encoded_filter = urlEncode(filter_);
             std::string smax_url = url_ + "&filter=" + encoded_filter;
             sendGET(smax_url);
-            std::this_thread::sleep_for(std::chrono::seconds(period_));
+            lock.lock();
+
+            cv_.wait_for(lock, std::chrono::seconds(period_), [this]() { return !running_; });
         }
     });
+}
+
+void Checker::stop() {
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        running_ = false;
+    }
+    cv_.notify_all();
+
+    if (worker_.joinable()) {
+        worker_.join();
+    }
+
+    Shell_NotifyIcon(NIM_DELETE, &nid_);
+    DestroyWindow(hwnd_);
 }
 
 void Checker::shutdown() {
@@ -106,9 +133,26 @@ void Checker::shutdown() {
     }
 }
 
+void Checker::dismissAlert() {
+    nid_.uFlags |= NIF_INFO;
+    wcscpy_s(nid_.szInfo, L"");
+    wcscpy_s(nid_.szInfoTitle, L"");
+    nid_.dwInfoFlags = NIIF_NONE;
+}
+
+
 void Checker::acknowledge() {
+    dismissAlert();
+
     nid_.hIcon = LoadIcon(hInst_, MAKEINTRESOURCE(SMAX_TRAY_ICON_INIT));
     Shell_NotifyIcon(NIM_MODIFY, &nid_);
+}
+
+void Checker::updateConfiguration() {
+    dismissAlert();
+
+    TokenInitializer::UpdateINI(L"config.ini");
+    readConfig();
 }
 
 LRESULT CALLBACK Checker::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
@@ -120,6 +164,7 @@ LRESULT CALLBACK Checker::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
                 POINT pt;
                 GetCursorPos(&pt);
                 HMENU hMenu = CreatePopupMenu();
+                AppendMenu(hMenu, MF_STRING, 3, L"Settings");
                 AppendMenu(hMenu, MF_STRING, 2, L"Acknowledge");
                 AppendMenu(hMenu, MF_STRING, 1, L"Shut Down");
 
@@ -133,6 +178,8 @@ LRESULT CALLBACK Checker::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
                     wURL = std::wstring(Checker::getInstance().portalURL_.begin(), Checker::getInstance().portalURL_.end());
                     ShellExecute(hwnd, L"open", wURL.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
                     Checker::getInstance().acknowledge();
+                } else if (cmd == 3) {
+                    Checker::getInstance().updateConfiguration();
                 }
             }
             return 0;
@@ -153,6 +200,8 @@ LRESULT CALLBACK Checker::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 
 void Checker::readConfig() {
     CSimpleIniW ini;
+    processedIDs_ = std::set<std::string>();
+
     ini.LoadFile(iniFile_.c_str());
 
     period_ = std::stoi(ini.GetValue(L"Settings", L"period", L"60"));
@@ -241,6 +290,7 @@ size_t Checker::update_processed_ids(const std::vector<std::string>& ids) {
 
 void Checker::sendGET(const std::string& url) {
     auto result = Requestor::get(url, userName_, token_);
+    dismissAlert();
     
     if (result.has_value()) {
         auto ids = extract_ids_from_json(result.value());
@@ -253,7 +303,9 @@ void Checker::sendGET(const std::string& url) {
         }
     } else {
         showNotification("Failed to fetch data from SMAX");
-        shutdown();
+
+        nid_.hIcon = LoadIcon(hInst_, MAKEINTRESOURCE(SMAX_TRAY_ICON_ERROR));
+        Shell_NotifyIcon(NIM_MODIFY, &nid_);
     }
 }
 

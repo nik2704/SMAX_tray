@@ -12,6 +12,8 @@
 
 #include <thread>
 #include <atomic>
+#include <condition_variable>
+#include <mutex>
 #include <string>
 #include <set>
 #include <vector>
@@ -39,6 +41,11 @@ public:
      * @brief Acknowledges and clears current notifications or events.
      */
     void acknowledge();
+
+    /**
+     * @brief Updates currently used configuration in the INI file.
+     */
+    void updateConfiguration();
 
     /**
      * @brief Starts the background checker using the provided instance handle and configuration file.
@@ -69,6 +76,21 @@ private:
      * @brief Reads configuration parameters from the INI file.
      */
     void readConfig();
+
+    /**
+     * @brief Runs the cycle to get information from SMAX.
+     */
+    void runWorker();
+
+    /**
+     * @brief Stops the worker thread and cleans up resources.
+     */
+    void Checker::stop();
+    
+    /**
+     * @brief Dismisses the current alert and resets the notification icon.
+     */
+    void Checker::dismissAlert();
 
     /**
      * @brief Encodes a string for safe use in a URL.
@@ -120,6 +142,8 @@ private:
     HINSTANCE hInst_ = nullptr;             ///< Application instance handle.
     NOTIFYICONDATA nid_ = {};               ///< Notification icon data.
     std::thread worker_;                    ///< Background worker thread.
+    std::mutex mutex_;
+    std::condition_variable cv_;
     std::atomic<bool> running_;             ///< Flag indicating if the checker is running.
     std::set<std::string> processedIDs_;    ///< Set of already processed IDs to avoid duplicates.
 
@@ -129,8 +153,6 @@ private:
     std::string token_;                     ///< API token for authorization.
     std::string filter_;                    ///< Optional filter string for requests.
     int period_ = 60;                       ///< Period in seconds between each request.
-
-    static Checker* instance_;              ///< Singleton instance pointer.
 };
 
 } // namespace smax

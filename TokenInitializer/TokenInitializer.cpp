@@ -14,6 +14,12 @@ INT_PTR CALLBACK FullInputDlgProc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM 
     switch (msg) {
         case WM_INITDIALOG:
             input = reinterpret_cast<InputFullData*>(lParam);
+            SetDlgItemTextW(hwndDlg, 1001, input->hostname);
+            SetDlgItemTextW(hwndDlg, 1002, input->tenant);
+            SetDlgItemTextW(hwndDlg, 1003, input->period);
+            SetDlgItemTextW(hwndDlg, 1004, input->username);
+            SetDlgItemTextW(hwndDlg, 1005, input->token);
+
             return TRUE;
 
         case WM_COMMAND:
@@ -77,6 +83,60 @@ bool TokenInitializer::generateINI(const std::wstring& iniPath) {
 
     return ini.SaveFile(iniPath.c_str()) >= 0;
 }
+
+void TokenInitializer::UpdateINI(const std::wstring& iniPath) {
+    HINSTANCE hInstance = GetModuleHandleW(NULL);
+    CSimpleIniW ini;
+    ini.SetUnicode();
+
+    InputFullData data = {};
+
+    // If the file doesn't exist, fall back to generateINI
+    if (!PathFileExistsW(iniPath.c_str())) {
+        generateINI(iniPath);
+        return;
+    }
+
+    ini.SetSpaces(true);
+    if (ini.LoadFile(iniPath.c_str()) < 0) {
+        MessageBoxW(NULL, L"Failed to load config file.", L"Error", MB_ICONERROR);
+        return;
+    }
+
+    const wchar_t* tenant = ini.GetValue(L"Settings", L"instance", L"");
+    const wchar_t* period = ini.GetValue(L"Settings", L"period", L"");
+    const wchar_t* hostname = ini.GetValue(tenant, L"hostname", L"");
+    const wchar_t* userName = ini.GetValue(tenant, L"userName", L"");
+    const wchar_t* token = ini.GetValue(tenant, L"token", L"");
+
+    // Decrypt values if needed
+    std::wstring decryptedUser = utf8ToWide(getDecryptedString(userName));
+    std::wstring decryptedToken = utf8ToWide(getDecryptedString(token));
+
+    // Pre-fill the dialog buffer
+    wcsncpy_s(data.hostname, hostname, _TRUNCATE);
+    wcsncpy_s(data.tenant, tenant, _TRUNCATE);
+    wcsncpy_s(data.period, period, _TRUNCATE);
+    wcsncpy_s(data.username, decryptedUser.c_str(), _TRUNCATE);
+    wcsncpy_s(data.token, decryptedToken.c_str(), _TRUNCATE);
+
+    INT_PTR result = DialogBoxParamW(hInstance, MAKEINTRESOURCE(102), NULL, FullInputDlgProc, reinterpret_cast<LPARAM>(&data));
+    if (result != IDOK) return;
+
+    // Save updated values
+    ini.SetValue(L"Settings", L"instance", data.tenant);
+    ini.SetValue(L"Settings", L"period", data.period);
+
+    ini.SetValue(data.tenant, L"hostname", data.hostname);
+    ini.SetValue(data.tenant, L"tenantId", data.tenant);
+    ini.SetValue(data.tenant, L"userName", getEncryptedString(data.username).c_str());
+    ini.SetValue(data.tenant, L"token", getEncryptedString(data.token).c_str());
+
+    if (ini.SaveFile(iniPath.c_str()) < 0) {
+        MessageBoxW(NULL, L"Failed to save config file.", L"Error", MB_ICONERROR);
+    }
+}
+
 
 void TokenInitializer::processINI(const std::wstring& iniPath) {
     CSimpleIniW ini;
