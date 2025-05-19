@@ -5,7 +5,12 @@ set(PATCH_VERSION "1" CACHE INTERNAL "Patch version")
 set(PROJECT_VERSION 0.0.${PATCH_VERSION})
 
 project(smax_tray_client VERSION ${PROJECT_VERSION} LANGUAGES CXX)
-set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
+# ✅ Statically link the C++ runtime if using MSVC
+if(MSVC)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
+
 
 add_definitions(-DUNICODE -D_UNICODE)
 
