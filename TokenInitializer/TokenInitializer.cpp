@@ -38,6 +38,13 @@ INT_PTR CALLBACK FullInputDlgProc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM 
                         return TRUE;
                     }
 
+                    int periodValue = _wtoi(input->period);
+
+                    if (periodValue < 60) {
+                        periodValue = 60;
+                        _itow_s(periodValue, input->period, 256, 10);
+                    }
+
                     EndDialog(hwndDlg, IDOK);
                     return TRUE;
                 }
@@ -66,6 +73,7 @@ void TokenInitializer::initializeToken(const std::wstring& iniPath) {
 bool TokenInitializer::generateINI(const std::wstring& iniPath) {
     HINSTANCE hInstance = GetModuleHandleW(NULL);
     InputFullData data = {};
+    wcscpy_s(data.period, L"60");
 
     INT_PTR result = DialogBoxParamW(hInstance, MAKEINTRESOURCE(102), NULL, FullInputDlgProc, reinterpret_cast<LPARAM>(&data));
     if (result != IDOK) return false;
