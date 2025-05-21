@@ -94,6 +94,14 @@ jobs:
       #   ctest --output-on-failure # Runs all tests and shows output for failures
       # shell: pwsh
 
+    - name: Install NSIS
+      # Installs Nullsoft Scriptable Install System (NSIS) using Chocolatey.
+      # NSIS is required by CPack to generate the Windows installer (.exe).
+      uses: chocolatey/choco-action@v1
+      with:
+        name: nsis
+        version: '3.09' # You can specify a specific version or omit for latest
+
     - name: Create Windows Installer with CPack
       # Runs CPack to generate the installer based on the configuration in CMakeLists.txt.
       run: |
