@@ -3,7 +3,7 @@ name: Windows Build and Package
 on:
   push:
     tags:
-      - 'v*'
+      - 'v*'  # Triggers only on version tags like v1.0.0
 
 jobs:
   build-windows:
@@ -22,81 +22,33 @@ jobs:
         path: |
           ${{ github.workspace }}\vcpkg
           ${{ github.workspace }}\vcpkg\installed
-        key: ${{ runner.os}}-vcpkg-static-${{ hashFiles('**/CMakeLists.txt') }}
+        key: ${{ runner.os }}-vcpkg-${{ hashFiles('**/CMakeLists.txt') }}
         restore-keys: |
-          ${{ runner.os }}-vcpkg-static-
+          ${{ runner.os }}-vcpkg-
 
-    - name: Bootstrap vcpkg
+    - name: Install vcpkg and Boost.Json
       shell: pwsh
-      env:
-        VCPKG_ROOT: ${{ github.workspace }}\vcpkg
       run: |
-        $bootstrapScriptPath = "$env:VCPKG_ROOT\bootstrap-vcpkg.bat"
+        $env:VCPKG_ROOT = "${{ github.workspace }}\vcpkg"
 
-        if (-not (Test-Path $bootstrapScriptPath)) {
-          Write-Host "bootstrap-vcpkg.bat not found. Cloning vcpkg repository."
-          if (Test-Path $env:VCPKG_ROOT) {
-              Remove-Item -Recurse -Force $env:VCPKG_ROOT
-          }
+        if (-not (Test-Path "$env:VCPKG_ROOT\vcpkg.exe")) {
+          Write-Host "Cloning and bootstrapping vcpkg..."
           git clone https://github.com/microsoft/vcpkg.git $env:VCPKG_ROOT
+          & "$env:VCPKG_ROOT\bootstrap-vcpkg.bat"
         } else {
-          Write-Host "bootstrap-vcpkg.bat found (vcpkg likely restored from cache)."
-        }
-        & $bootstrapScriptPath | Out-Default
-
-    - name: Create custom vcpkg triplet for static Boost + shared CRT
-      shell: pwsh
-      env: # Set VCPKG_ROOT here for this step's context too
-        VCPKG_ROOT: ${{ github.workspace }}\vcpkg
-      run: |
-        $tripletDir = "${{ github.workspace }}\vcpkg\triplets\community"
-        New-Item -ItemType Directory -Force -Path $tripletDir | Out-Null
-        Set-Content -Path "$tripletDir\x64-windows-booststatic.cmake" -Value @"
-        set(VCPKG_TARGET_ARCHITECTURE x64)
-        set(VCPKG_CRT_LINKAGE dynamic)
-        set(VCPKG_LIBRARY_LINKAGE static)
-        "@
-
-    - name: Show created triplet file (debug)
-      shell: pwsh
-      run: |
-        Get-ChildItem "${{ github.workspace }}\vcpkg\triplets\community"
-        Get-Content "${{ github.workspace }}\vcpkg\triplets\community\x64-windows-booststatic.cmake"
-
-    - name: Install Boost.Json (Static)
-      shell: pwsh
-      env:
-        VCPKG_ROOT: ${{ github.workspace }}\vcpkg
-        TRIPLET: x64-windows-booststatic
-        VCPKG_OVERLAY_TRIPLETS: ${{ github.workspace }}\vcpkg\triplets\community # Ensure it's here
-      run: |
-        Write-Host "VCPKG_ROOT: $env:VCPKG_ROOT"
-        Write-Host "TRIPLET: $env:TRIPLET"
-        Write-Host "VCPKG_OVERLAY_TRIPLETS: $env:VCPKG_OVERLAY_TRIPLETS"
-
-        $tripletFilePath = "$env:VCPKG_OVERLAY_TRIPLETS\$env:TRIPLET.cmake"
-        if (Test-Path $tripletFilePath) {
-            Write-Host "Custom triplet file found at: $tripletFilePath"
-            Get-Content $tripletFilePath
-        } else {
-            Write-Host "ERROR: Custom triplet file NOT FOUND at: $tripletFilePath"
-            exit 1 # Fail the step if the triplet file isn't there
+          Write-Host "vcpkg already present."
         }
 
-        Write-Host "Attempting to install boost-json with custom triplet..."
-        & "$env:VCPKG_ROOT\vcpkg.exe" install boost-json:$env:TRIPLET --recurse
+        Write-Host "Installing boost-json..."
+        & "$env:VCPKG_ROOT\vcpkg.exe" install boost-json:x64-windows --recurse
 
     - name: Configure CMake
       shell: pwsh
-      env: # Ensure VCPKG_ROOT and TRIPLET are set for CMake
-        VCPKG_ROOT: ${{ github.workspace }}\vcpkg
-        TRIPLET: x64-windows-booststatic
       run: |
         mkdir build
         cd build
         cmake -G "Visual Studio 17 2022" -A x64 .. `
           -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}\vcpkg\scripts\buildsystems\vcpkg.cmake `
-          -DVCPKG_TARGET_TRIPLET=$env:TRIPLET `
           -DCMAKE_BUILD_TYPE=Release
 
     - name: Build Project
@@ -110,4 +62,4 @@ jobs:
       with:
         files: build/Release/*.exe
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.MY_TOKEN }}

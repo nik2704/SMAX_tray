@@ -24,6 +24,7 @@ cmake_policy(SET CMP0167 OLD)
 # Boost (vcpkg handles static/dynamic, so just find json component)
 find_package(Boost REQUIRED COMPONENTS json)
 
+
 # Executable and source files
 add_executable(smax_tray_client WIN32
     main.cpp
