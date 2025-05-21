@@ -1,65 +1,99 @@
-name: Build smax_tray_client on Windows
+name: Windows Build and Package
 
+# Triggers the workflow on pushes to the 'main' branch
 on:
   push:
     branches:
-      - main
-  pull_request:
-    branches:
-      - main
+      - main # Or 'master', depending on your default branch name
 
 jobs:
   build-windows:
-    strategy:
-      matrix:
-        os: [windows-2019, windows-2022]  # Windows 10 (Server 2019) & Windows 11 (Server 2022)
-    runs-on: ${{ matrix.os }}
-
-    env:
-      BOOST_ROOT: C:/boost/boost_1_87_0
+    # Specifies the operating system for the job
+    runs-on: windows-latest # Uses the latest available Windows runner image
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+    - name: Checkout Repository
+      # Uses the actions/checkout@v4 action to clone your repository's code
+      uses: actions/checkout@v4
 
-    - name: Check CMake version
-      run: cmake --version
-      shell: cmd
+    - name: Setup MSBuild and MSVC
+      # Uses the microsoft/setup-msbuild@v1.1 action to configure the
+      # Visual Studio development environment, including MSBuild and MSVC tools.
+      uses: microsoft/setup-msbuild@v1.1
 
-    - name: Setup Boost
+    - name: Install vcpkg and Boost
+      # This step handles the installation of vcpkg (a C++ package manager)
+      # and then uses it to install the 'boost-json' library.
+      # Caching is used to speed up subsequent workflow runs by reusing
+      # previously installed vcpkg and its packages.
+      id: vcpkg_install
       run: |
-        echo Using Boost at %BOOST_ROOT%
-        if not exist "%BOOST_ROOT%" (
-          echo ERROR: BOOST_ROOT path does not exist!
-          exit 1
-        )
-      shell: cmd
+        # Define VCPKG_ROOT environment variable for this step and subsequent ones.
+        # This points to where vcpkg will be installed and its packages.
+        $env:VCPKG_ROOT = "${{ github.workspace }}\vcpkg"
+
+        # Check if vcpkg already exists in the cache directory.
+        # If not, clone and bootstrap vcpkg.
+        if (-not (Test-Path "$env:VCPKG_ROOT\vcpkg.exe")) {
+          Write-Host "vcpkg not found in cache, installing..."
+          git clone https://github.com/microsoft/vcpkg.git $env:VCPKG_ROOT
+          & "$env:VCPKG_ROOT\bootstrap-vcpkg.bat"
+        } else {
+          Write-Host "vcpkg found in cache, skipping clone and bootstrap."
+        }
+
+        # Install Boost.Json for x64 Windows.
+        # --recurse ensures all dependencies of boost-json are also installed.
+        # --x-acquire-native-tools ensures necessary build tools for vcpkg are acquired.
+        Write-Host "Installing boost-json:x64-windows via vcpkg..."
+        & "$env:VCPKG_ROOT\vcpkg.exe" install boost-json:x64-windows --recurse --x-acquire-native-tools
+      shell: pwsh # Specifies PowerShell as the shell for this step
 
     - name: Configure CMake
-      run: cmake -S . -B build -G "Visual Studio 16 2019" -A x64 -DBOOST_ROOT=%BOOST_ROOT%
-      shell: cmd
-
-    - name: Build with MSBuild
-      run: cmake --build build --config Release
-      shell: cmd
-
-    - name: Prepare dist folder and copy EXE and DLLs
+      # Configures the CMake project.
       run: |
-        mkdir dist
-        copy build\Release\smax_tray_client.exe dist\
-        if exist "%BOOST_ROOT%\stage\lib\" (
-          xcopy "%BOOST_ROOT%\stage\lib\*.dll" dist\ /Y
-        ) else (
-          echo Boost DLL folder not found, skipping DLL copy
-        )
-      shell: cmd
+        mkdir build # Create a build directory
+        cd build
+        # Run CMake:
+        # -G "Visual Studio 17 2022" specifies the generator for Visual Studio 2022.
+        # -A x64 specifies the target architecture as x64.
+        # -DCMAKE_TOOLCHAIN_FILE points CMake to the vcpkg toolchain file,
+        # which helps CMake find the libraries installed by vcpkg.
+        cmake -G "Visual Studio 17 2022" -A x64 .. -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}\vcpkg\scripts\buildsystems\vcpkg.cmake
+      shell: pwsh # Specifies PowerShell as the shell for this step
 
-    - name: List dist folder contents
-      run: dir dist
-      shell: cmd
+    - name: Build Project
+      # Builds the project using CMake's build command.
+      run: |
+        cd build
+        # Builds the project in 'Release' configuration.
+        cmake --build . --config Release
+      shell: pwsh # Specifies PowerShell as the shell for this step
 
-    - name: Upload build artifacts
-      uses: actions/upload-artifact@v2
+    - name: Run Tests (Optional)
+      # This is a placeholder for running tests.
+      # If you have CTest tests defined in your CMakeLists.txt, you can uncomment
+      # and modify the commands below to execute them.
+      run: Write-Host "No CTest tests defined in CMakeLists.txt. Skipping test step."
+      # Example for running CTest:
+      # run: |
+      #   cd build
+      #   ctest --output-on-failure # Runs all tests and shows output for failures
+      # shell: pwsh
+
+    - name: Create Windows Installer with CPack
+      # Runs CPack to generate the installer based on the configuration in CMakeLists.txt.
+      run: |
+        cd build
+        # CPack will use the 'NSIS' generator configured in CMakeLists.txt
+        # to create the executable installer.
+        cpack -C Release -G NSIS
+      shell: pwsh # Specifies PowerShell as the shell for this step
+
+    - name: Upload Artifacts
+      # Uploads the generated installer executable as a workflow artifact.
+      # This makes the installer available for download from the GitHub Actions run summary.
+      uses: actions/upload-artifact@v4
       with:
-        name: smax_tray_client-win-${{ matrix.os }}
-        path: dist
+        name: smax-tray-client-windows-installer
+        path: build/*.exe # Path to the generated NSIS installer .exe file
