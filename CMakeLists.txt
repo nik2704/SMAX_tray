@@ -1,30 +1,23 @@
 cmake_minimum_required(VERSION 3.12)
 
-# Set version components
+# Project versioning
 set(PATCH_VERSION "1" CACHE INTERNAL "Patch version")
 set(PROJECT_VERSION 0.0.${PATCH_VERSION})
-
 project(smax_tray_client VERSION ${PROJECT_VERSION} LANGUAGES CXX)
 
-# ✅ Statically link the C++ runtime if using MSVC
+# MSVC Runtime: statically link C++ runtime
 if(MSVC)
     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 endif()
 
-
 add_definitions(-DUNICODE -D_UNICODE)
 
-
-# Boost configuration
-set(BOOST_ROOT "C:/boost/boost_1_87_0")
-set(Boost_NO_SYSTEM_PATHS ON)
-
 # CMake policies
-cmake_policy(SET CMP0144 NEW)  # New behavior for CMAKE_INSTALL_INCLUDEDIR etc.
-cmake_policy(SET CMP0167 OLD)  # Disable transitive LTO
+cmake_policy(SET CMP0144 NEW)
+cmake_policy(SET CMP0167 OLD)
 
-# Find Boost
-find_package(Boost 1.87 REQUIRED COMPONENTS json)
+# Boost (vcpkg will handle it)
+find_package(Boost REQUIRED COMPONENTS json)
 
 # Executable and source files
 add_executable(smax_tray_client WIN32
@@ -37,10 +30,8 @@ add_executable(smax_tray_client WIN32
     resources.rc
 )
 
-# Compiler and linker settings
+# Compile and include paths
 target_compile_definitions(smax_tray_client PRIVATE BOOST_ALL_NO_LIB)
-
-# target_include_directories(smax_tray_client PRIVATE ${Boost_INCLUDE_DIRS})
 target_include_directories(smax_tray_client PRIVATE
     ${Boost_INCLUDE_DIRS}
     ${CMAKE_CURRENT_SOURCE_DIR}/Checker
@@ -49,17 +40,27 @@ target_include_directories(smax_tray_client PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/Utils
 )
 
-target_link_libraries(smax_tray_client PRIVATE ${Boost_LIBRARIES} crypt32 Boost::json Shlwapi.lib)
+# Linking
+target_link_libraries(smax_tray_client PRIVATE
+    Boost::json
+    crypt32
+    Shlwapi.lib
+)
 
 set_target_properties(smax_tray_client PROPERTIES
     CXX_STANDARD 17
     CXX_STANDARD_REQUIRED ON
 )
 
-# ✅ Define install location
+# Installation
 install(TARGETS smax_tray_client DESTINATION bin)
 
-# ✅ NSIS Packaging (CPack)
+# Optional: Copy Boost DLLs if using shared linking (safe fallback)
+install(DIRECTORY "${CMAKE_SOURCE_DIR}/vcpkg/installed/x64-windows/bin/"
+        DESTINATION bin
+        FILES_MATCHING PATTERN "*.dll")
+
+# NSIS packaging
 include(InstallRequiredSystemLibraries)
 
 set(CPACK_GENERATOR NSIS)
@@ -70,14 +71,12 @@ set(CPACK_PACKAGE_VERSION_MAJOR "${PROJECT_VERSION_MAJOR}")
 set(CPACK_PACKAGE_VERSION_MINOR "${PROJECT_VERSION_MINOR}")
 set(CPACK_PACKAGE_VERSION_PATCH "${PROJECT_VERSION_PATCH}")
 set(CPACK_PACKAGE_CONTACT "example@example.com")
-
 set(CPACK_NSIS_DISPLAY_NAME "SMAX Tray Client")
 set(CPACK_NSIS_PACKAGE_NAME "SMAX_Tray_Client")
-set(CPACK_NSIS_MUI_ICON "${CMAKE_CURRENT_SOURCE_DIR}/resources/icon.ico") # Optional
+set(CPACK_NSIS_MUI_ICON "${CMAKE_CURRENT_SOURCE_DIR}/resources/icon.ico")
 set(CPACK_NSIS_EXECUTABLES_DIRECTORY "bin")
 set(CPACK_NSIS_INSTALL_ROOT "$PROGRAMFILES64")
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "SMAX Tray Client")
-
 set(CPACK_CREATE_DESKTOP_LINKS "smax_tray_client")
 set(CPACK_PACKAGE_EXECUTABLES "smax_tray_client" "SMAX Tray Client")
 
