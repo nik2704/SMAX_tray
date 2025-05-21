@@ -43,8 +43,15 @@ jobs:
         $env:VCPKG_ROOT = "${{ github.workspace }}\vcpkg"
         $env:TRIPLET = "x64-windows-booststatic"
 
+        # Check if vcpkg.exe exists. If not, clone and bootstrap.
         if (-not (Test-Path "$env:VCPKG_ROOT\vcpkg.exe")) {
+          Write-Host "vcpkg.exe not found, cloning vcpkg repository..."
           git clone https://github.com/microsoft/vcpkg.git $env:VCPKG_ROOT
+          & "$env:VCPKG_ROOT\bootstrap-vcpkg.bat"
+        } else {
+          Write-Host "vcpkg.exe found, assuming vcpkg was restored from cache."
+          # If vcpkg.exe exists, ensure bootstrap is run just in case, or skip if confident.
+          # Running bootstrap again is generally safe and quick if already done.
           & "$env:VCPKG_ROOT\bootstrap-vcpkg.bat"
         }
 
@@ -71,4 +78,4 @@ jobs:
       with:
         files: build/Release/*.exe
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # or use a custom token if required
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # or use a custom token if required
