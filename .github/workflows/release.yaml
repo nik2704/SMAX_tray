@@ -1,0 +1,62 @@
+name: Build smax_tray_client on Windows
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-windows:
+    strategy:
+      matrix:
+        os: [windows-2019, windows-2022]  # Windows 10 (server 2019) & Windows 11 (server 2022)
+    runs-on: ${{ matrix.os }}
+
+    env:
+      BOOST_ROOT: C:/boost/boost_1_87_0
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup Boost
+      # If you have Boost pre-installed at BOOST_ROOT, skip install steps
+      run: |
+        echo "Using Boost at $BOOST_ROOT"
+      shell: powershell
+
+    - name: Configure CMake
+      run: |
+        cmake -S . -B build -G "Visual Studio 16 2019" -A x64 -DBOOST_ROOT=%BOOST_ROOT%
+      shell: cmd
+
+    - name: Build with MSBuild
+      run: |
+        cmake --build build --config Release
+      shell: cmd
+
+    - name: Copy EXE and DLLs to output folder
+      # We copy the EXE and dependent DLLs here to a folder called dist
+      run: |
+        mkdir dist
+        copy build\Release\smax_tray_client.exe dist\
+        # Copy Boost DLLs - adjust if you have other DLL dependencies
+        xcopy "%BOOST_ROOT%\stage\lib\*.dll" dist\ /Y
+        # Copy Windows system DLLs if needed or any other dependencies
+      shell: cmd
+
+    - name: Verify EXE dependencies
+      run: |
+        # Optionally use dumpbin or Dependency Walker if available
+        echo "Listing DLLs in dist folder"
+        dir dist
+      shell: cmd
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: smax_tray_client-win-${{ matrix.os }}
+        path: dist
