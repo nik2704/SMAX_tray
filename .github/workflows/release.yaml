@@ -21,6 +21,19 @@ jobs:
       # Visual Studio development environment, including MSBuild and MSVC tools.
       uses: microsoft/setup-msbuild@v1.1
 
+    - name: Cache vcpkg and Installed Packages
+      # Caches the vcpkg tool itself and its installed packages to speed up
+      # subsequent workflow runs. The cache key includes the OS and a hash
+      # of CMakeLists.txt to ensure the cache is invalidated if dependencies change.
+      uses: actions/cache@v3
+      with:
+        path: |
+          ${{ github.workspace }}\vcpkg
+          ${{ github.workspace }}\vcpkg\installed
+        key: ${{ runner.os }}-vcpkg-${{ hashFiles('**/CMakeLists.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-vcpkg-
+
     - name: Install vcpkg and Boost
       # This step handles the installation of vcpkg (a C++ package manager)
       # and then uses it to install the 'boost-json' library.
