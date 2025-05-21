@@ -29,7 +29,8 @@ jobs:
     - name: Create custom vcpkg triplet for static Boost + shared CRT
       shell: pwsh
       run: |
-        $tripletDir = "${{ github.workspace }}\vcpkg\triplets\community"
+        # Changed the triplet directory to directly under vcpkg/triplets
+        $tripletDir = "${{ github.workspace }}\vcpkg\triplets"
         New-Item -ItemType Directory -Force -Path $tripletDir | Out-Null
         Set-Content -Path "$tripletDir\x64-windows-booststatic.cmake" -Value @"
         set(VCPKG_TARGET_ARCHITECTURE x64)
