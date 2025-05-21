@@ -12,7 +12,7 @@ jobs:
   build-windows:
     strategy:
       matrix:
-        os: [windows-2019, windows-2022]  # Windows 10 (server 2019) & Windows 11 (server 2022)
+        os: [windows-2019, windows-2022]  # Windows 10 (Server 2019) & Windows 11 (Server 2022)
     runs-on: ${{ matrix.os }}
 
     env:
@@ -22,41 +22,44 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
+    - name: Check CMake version
+      run: cmake --version
+      shell: cmd
+
     - name: Setup Boost
-      # If you have Boost pre-installed at BOOST_ROOT, skip install steps
       run: |
-        echo "Using Boost at $BOOST_ROOT"
-      shell: powershell
+        echo Using Boost at %BOOST_ROOT%
+        if not exist "%BOOST_ROOT%" (
+          echo ERROR: BOOST_ROOT path does not exist!
+          exit 1
+        )
+      shell: cmd
 
     - name: Configure CMake
-      run: |
-        cmake -S . -B build -G "Visual Studio 16 2019" -A x64 -DBOOST_ROOT=%BOOST_ROOT%
+      run: cmake -S . -B build -G "Visual Studio 16 2019" -A x64 -DBOOST_ROOT=%BOOST_ROOT%
       shell: cmd
 
     - name: Build with MSBuild
-      run: |
-        cmake --build build --config Release
+      run: cmake --build build --config Release
       shell: cmd
 
-    - name: Copy EXE and DLLs to output folder
-      # We copy the EXE and dependent DLLs here to a folder called dist
+    - name: Prepare dist folder and copy EXE and DLLs
       run: |
         mkdir dist
         copy build\Release\smax_tray_client.exe dist\
-        # Copy Boost DLLs - adjust if you have other DLL dependencies
-        xcopy "%BOOST_ROOT%\stage\lib\*.dll" dist\ /Y
-        # Copy Windows system DLLs if needed or any other dependencies
+        if exist "%BOOST_ROOT%\stage\lib\" (
+          xcopy "%BOOST_ROOT%\stage\lib\*.dll" dist\ /Y
+        ) else (
+          echo Boost DLL folder not found, skipping DLL copy
+        )
       shell: cmd
 
-    - name: Verify EXE dependencies
-      run: |
-        # Optionally use dumpbin or Dependency Walker if available
-        echo "Listing DLLs in dist folder"
-        dir dist
+    - name: List dist folder contents
+      run: dir dist
       shell: cmd
 
     - name: Upload build artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v2
       with:
         name: smax_tray_client-win-${{ matrix.os }}
         path: dist
