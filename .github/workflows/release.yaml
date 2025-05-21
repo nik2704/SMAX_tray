@@ -43,18 +43,34 @@ jobs:
         $env:VCPKG_ROOT = "${{ github.workspace }}\vcpkg"
         $env:TRIPLET = "x64-windows-booststatic"
 
-        # Check if vcpkg.exe exists. If not, clone and bootstrap.
-        if (-not (Test-Path "$env:VCPKG_ROOT\vcpkg.exe")) {
-          Write-Host "vcpkg.exe not found, cloning vcpkg repository..."
-          git clone https://github.com/microsoft/vcpkg.git $env:VCPKG_ROOT
-          & "$env:VCPKG_ROOT\bootstrap-vcpkg.bat"
-        } else {
-          Write-Host "vcpkg.exe found, assuming vcpkg was restored from cache."
-          # If vcpkg.exe exists, ensure bootstrap is run just in case, or skip if confident.
-          # Running bootstrap again is generally safe and quick if already done.
-          & "$env:VCPKG_ROOT\bootstrap-vcpkg.bat"
+        # Check if the vcpkg directory exists and is empty.
+        # If it doesn't exist or is empty, then clone vcpkg.
+        # Otherwise, assume it was restored by cache.
+        $vcpkgDirExists = Test-Path $env:VCPKG_ROOT
+        $vcpkgDirIsEmpty = $true
+        if ($vcpkgDirExists) {
+            # Check if directory contains any items (files or subdirectories)
+            if ((Get-ChildItem -Path $env:VCPKG_ROOT | Measure-Object).Count -gt 0) {
+                $vcpkgDirIsEmpty = $false
+            }
         }
 
+        if (-not $vcpkgDirExists -or $vcpkgDirIsEmpty) {
+          Write-Host "vcpkg directory is missing or empty. Cloning vcpkg repository..."
+          # Ensure the directory exists before cloning, if it didn't exist initially
+          if (-not $vcpkgDirExists) {
+              New-Item -ItemType Directory -Force -Path $env:VCPKG_ROOT | Out-Null
+          }
+          git clone https://github.com/microsoft/vcpkg.git $env:VCPKG_ROOT
+        } else {
+          Write-Host "vcpkg directory found (likely restored from cache)."
+        }
+
+        # Always run bootstrap-vcpkg.bat to ensure it's up-to-date and compiled.
+        # This is idempotent and crucial for vcpkg to function correctly.
+        & "$env:VCPKG_ROOT\bootstrap-vcpkg.bat"
+
+        # Now install the dependencies
         & "$env:VCPKG_ROOT\vcpkg.exe" install boost-json:$env:TRIPLET --recurse
 
     - name: Configure CMake
