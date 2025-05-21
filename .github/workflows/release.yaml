@@ -22,12 +22,32 @@ jobs:
         path: |
           ${{ github.workspace }}\vcpkg
           ${{ github.workspace }}\vcpkg\installed
-        key: ${{ runner.os }}-vcpkg-static-${{ hashFiles('**/CMakeLists.txt') }}
+        key: ${{ runner.os}}-vcpkg-static-${{ hashFiles('**/CMakeLists.txt') }}
         restore-keys: |
           ${{ runner.os }}-vcpkg-static-
 
+    - name: Bootstrap vcpkg
+      shell: pwsh
+      env:
+        VCPKG_ROOT: ${{ github.workspace }}\vcpkg
+      run: |
+        $bootstrapScriptPath = "$env:VCPKG_ROOT\bootstrap-vcpkg.bat"
+
+        if (-not (Test-Path $bootstrapScriptPath)) {
+          Write-Host "bootstrap-vcpkg.bat not found. Cloning vcpkg repository."
+          if (Test-Path $env:VCPKG_ROOT) {
+              Remove-Item -Recurse -Force $env:VCPKG_ROOT
+          }
+          git clone https://github.com/microsoft/vcpkg.git $env:VCPKG_ROOT
+        } else {
+          Write-Host "bootstrap-vcpkg.bat found (vcpkg likely restored from cache)."
+        }
+        & $bootstrapScriptPath | Out-Default
+
     - name: Create custom vcpkg triplet for static Boost + shared CRT
       shell: pwsh
+      env: # Set VCPKG_ROOT here for this step's context too
+        VCPKG_ROOT: ${{ github.workspace }}\vcpkg
       run: |
         $tripletDir = "${{ github.workspace }}\vcpkg\triplets\community"
         New-Item -ItemType Directory -Force -Path $tripletDir | Out-Null
@@ -43,24 +63,34 @@ jobs:
         Get-ChildItem "${{ github.workspace }}\vcpkg\triplets\community"
         Get-Content "${{ github.workspace }}\vcpkg\triplets\community\x64-windows-booststatic.cmake"
 
-    - name: Install vcpkg and Boost.Json
+    - name: Install Boost.Json (Static)
       shell: pwsh
+      env:
+        VCPKG_ROOT: ${{ github.workspace }}\vcpkg
+        TRIPLET: x64-windows-booststatic
+        VCPKG_OVERLAY_TRIPLETS: ${{ github.workspace }}\vcpkg\triplets\community # Ensure it's here
       run: |
-        $env:VCPKG_ROOT = "${{ github.workspace }}\vcpkg"
+        Write-Host "VCPKG_ROOT: $env:VCPKG_ROOT"
+        Write-Host "TRIPLET: $env:TRIPLET"
+        Write-Host "VCPKG_OVERLAY_TRIPLETS: $env:VCPKG_OVERLAY_TRIPLETS"
 
-        if (-not (Test-Path "$env:VCPKG_ROOT\vcpkg.exe")) {
-          Write-Host "Cloning and bootstrapping vcpkg..."
-          git clone https://github.com/microsoft/vcpkg.git $env:VCPKG_ROOT
-          & "$env:VCPKG_ROOT\bootstrap-vcpkg.bat"
+        $tripletFilePath = "$env:VCPKG_OVERLAY_TRIPLETS\$env:TRIPLET.cmake"
+        if (Test-Path $tripletFilePath) {
+            Write-Host "Custom triplet file found at: $tripletFilePath"
+            Get-Content $tripletFilePath
         } else {
-          Write-Host "vcpkg already present."
+            Write-Host "ERROR: Custom triplet file NOT FOUND at: $tripletFilePath"
+            exit 1 # Fail the step if the triplet file isn't there
         }
 
-        Write-Host "Installing boost-json..."
-        & "$env:VCPKG_ROOT\vcpkg.exe" install boost-json:x64-windows --recurse
-        
+        Write-Host "Attempting to install boost-json with custom triplet..."
+        & "$env:VCPKG_ROOT\vcpkg.exe" install boost-json:$env:TRIPLET --recurse
+
     - name: Configure CMake
       shell: pwsh
+      env: # Ensure VCPKG_ROOT and TRIPLET are set for CMake
+        VCPKG_ROOT: ${{ github.workspace }}\vcpkg
+        TRIPLET: x64-windows-booststatic
       run: |
         mkdir build
         cd build
