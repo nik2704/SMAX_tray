@@ -29,10 +29,10 @@ jobs:
     - name: Create custom vcpkg triplet for static Boost + shared CRT
       shell: pwsh
       run: |
-        # Changed the triplet directory to directly under vcpkg/triplets
-        $tripletDir = "${{ github.workspace }}\vcpkg\triplets"
-        New-Item -ItemType Directory -Force -Path $tripletDir | Out-Null
-        Set-Content -Path "$tripletDir\x64-windows-booststatic.cmake" -Value @"
+        # Create a dedicated overlay triplet directory
+        $overlayTripletDir = "${{ github.workspace }}\vcpkg\overlay-triplets"
+        New-Item -ItemType Directory -Force -Path $overlayTripletDir | Out-Null
+        Set-Content -Path "$overlayTripletDir\x64-windows-booststatic.cmake" -Value @"
         set(VCPKG_TARGET_ARCHITECTURE x64)
         set(VCPKG_CRT_LINKAGE dynamic)
         set(VCPKG_LIBRARY_LINKAGE static)
@@ -43,6 +43,8 @@ jobs:
       run: |
         $env:VCPKG_ROOT = "${{ github.workspace }}\vcpkg"
         $env:TRIPLET = "x64-windows-booststatic"
+        # Set VCPKG_OVERLAY_TRIPLETS to point to our custom triplet directory
+        $env:VCPKG_OVERLAY_TRIPLETS = "${{ github.workspace }}\vcpkg\overlay-triplets"
 
         $bootstrapScriptPath = "$env:VCPKG_ROOT\bootstrap-vcpkg.bat"
 
