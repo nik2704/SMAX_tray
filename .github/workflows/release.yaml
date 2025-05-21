@@ -43,32 +43,23 @@ jobs:
         $env:VCPKG_ROOT = "${{ github.workspace }}\vcpkg"
         $env:TRIPLET = "x64-windows-booststatic"
 
-        # Check if the vcpkg directory exists and is empty.
-        # If it doesn't exist or is empty, then clone vcpkg.
-        # Otherwise, assume it was restored by cache.
-        $vcpkgDirExists = Test-Path $env:VCPKG_ROOT
-        $vcpkgDirIsEmpty = $true
-        if ($vcpkgDirExists) {
-            # Check if directory contains any items (files or subdirectories)
-            if ((Get-ChildItem -Path $env:VCPKG_ROOT | Measure-Object).Count -gt 0) {
-                $vcpkgDirIsEmpty = $false
-            }
-        }
+        $bootstrapScriptPath = "$env:VCPKG_ROOT\bootstrap-vcpkg.bat"
 
-        if (-not $vcpkgDirExists -or $vcpkgDirIsEmpty) {
-          Write-Host "vcpkg directory is missing or empty. Cloning vcpkg repository..."
-          # Ensure the directory exists before cloning, if it didn't exist initially
-          if (-not $vcpkgDirExists) {
-              New-Item -ItemType Directory -Force -Path $env:VCPKG_ROOT | Out-Null
+        # Check if bootstrap-vcpkg.bat exists. If not, assume vcpkg needs to be cloned.
+        if (-not (Test-Path $bootstrapScriptPath)) {
+          Write-Host "bootstrap-vcpkg.bat not found. Cloning vcpkg repository (or re-cloning if partial)."
+          # Remove the directory if it exists to ensure a clean clone
+          if (Test-Path $env:VCPKG_ROOT) {
+              Remove-Item -Recurse -Force $env:VCPKG_ROOT
           }
           git clone https://github.com/microsoft/vcpkg.git $env:VCPKG_ROOT
         } else {
-          Write-Host "vcpkg directory found (likely restored from cache)."
+          Write-Host "bootstrap-vcpkg.bat found (vcpkg likely restored from cache)."
         }
 
         # Always run bootstrap-vcpkg.bat to ensure it's up-to-date and compiled.
         # This is idempotent and crucial for vcpkg to function correctly.
-        & "$env:VCPKG_ROOT\bootstrap-vcpkg.bat"
+        & $bootstrapScriptPath
 
         # Now install the dependencies
         & "$env:VCPKG_ROOT\vcpkg.exe" install boost-json:$env:TRIPLET --recurse
