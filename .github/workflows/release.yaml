@@ -2,8 +2,8 @@ name: Windows Build and Package
 
 on:
   push:
-    tags:
-      - 'v*'  # Triggers only on version tags like v1.0.0
+    branches:
+      - main
 
 jobs:
   build-windows:
