@@ -64,11 +64,21 @@ jobs:
         # cd build
         # ctest --output-on-failure
 
+    - name: Install NSIS
+      shell: pwsh
+      run: choco install nsis -y
+
     - name: Create NSIS Installer with CPack
       shell: pwsh
       run: |
         cd build
         cpack -C Release -G NSIS
+
+    - name: Print NSIS log if packaging fails
+      if: failure()
+      shell: pwsh
+      run: |
+        Get-Content build/_CPack_Packages/win64/NSIS/NSISOutput.log -Raw
 
     - name: Upload Installer Artifact
       uses: actions/upload-artifact@v4
