@@ -26,7 +26,7 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-vcpkg-
 
-    - name: Install vcpkg and Boost.Json
+    - name: Install vcpkg and Boost.Json (Static)
       shell: pwsh
       run: |
         $env:VCPKG_ROOT = "${{ github.workspace }}\vcpkg"
@@ -39,8 +39,10 @@ jobs:
           Write-Host "vcpkg already present."
         }
 
-        Write-Host "Installing boost-json..."
-        & "$env:VCPKG_ROOT\vcpkg.exe" install boost-json:x64-windows --recurse
+        Write-Host "Installing boost-json (static)..."
+        # -- IMPORTANT CHANGE HERE --
+        # Use x64-windows-static to ensure static library builds from vcpkg
+        & "$env:VCPKG_ROOT\vcpkg.exe" install boost-json:x64-windows-static --recurse
 
     - name: Configure CMake
       shell: pwsh
@@ -49,7 +51,7 @@ jobs:
         cmake -S . -B build `
           -G "Visual Studio 17 2022" -A x64 `
           -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}\vcpkg\scripts\buildsystems\vcpkg.cmake `
-          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_BUILD_TYPE=Release # Ensure Release build for static runtime
 
     - name: Build Project
       shell: pwsh
