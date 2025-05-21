@@ -29,29 +29,30 @@ jobs:
     - name: Create custom vcpkg triplet for static Boost + shared CRT
       shell: pwsh
       run: |
-        # Create a dedicated overlay triplet directory
-        $overlayTripletDir = "${{ github.workspace }}\vcpkg\overlay-triplets"
-        New-Item -ItemType Directory -Force -Path $overlayTripletDir | Out-Null
-        Set-Content -Path "$overlayTripletDir\x64-windows-booststatic.cmake" -Value @"
+        $tripletDir = "${{ github.workspace }}\vcpkg\triplets\community"
+        New-Item -ItemType Directory -Force -Path $tripletDir | Out-Null
+        Set-Content -Path "$tripletDir\x64-windows-booststatic.cmake" -Value @"
         set(VCPKG_TARGET_ARCHITECTURE x64)
         set(VCPKG_CRT_LINKAGE dynamic)
         set(VCPKG_LIBRARY_LINKAGE static)
         "@
+
+    - name: Show created triplet file (debug)
+      shell: pwsh
+      run: |
+        Get-ChildItem "${{ github.workspace }}\vcpkg\triplets\community"
+        Get-Content "${{ github.workspace }}\vcpkg\triplets\community\x64-windows-booststatic.cmake"
 
     - name: Install vcpkg and Boost.Json (Static)
       shell: pwsh
       run: |
         $env:VCPKG_ROOT = "${{ github.workspace }}\vcpkg"
         $env:TRIPLET = "x64-windows-booststatic"
-        # Set VCPKG_OVERLAY_TRIPLETS to point to our custom triplet directory
-        $env:VCPKG_OVERLAY_TRIPLETS = "${{ github.workspace }}\vcpkg\overlay-triplets"
 
         $bootstrapScriptPath = "$env:VCPKG_ROOT\bootstrap-vcpkg.bat"
 
-        # Check if bootstrap-vcpkg.bat exists. If not, assume vcpkg needs to be cloned.
         if (-not (Test-Path $bootstrapScriptPath)) {
-          Write-Host "bootstrap-vcpkg.bat not found. Cloning vcpkg repository (or re-cloning if partial)."
-          # Remove the directory if it exists to ensure a clean clone
+          Write-Host "bootstrap-vcpkg.bat not found. Cloning vcpkg repository."
           if (Test-Path $env:VCPKG_ROOT) {
               Remove-Item -Recurse -Force $env:VCPKG_ROOT
           }
@@ -60,11 +61,8 @@ jobs:
           Write-Host "bootstrap-vcpkg.bat found (vcpkg likely restored from cache)."
         }
 
-        # Always run bootstrap-vcpkg.bat to ensure it's up-to-date and compiled.
-        # This is idempotent and crucial for vcpkg to function correctly.
         & $bootstrapScriptPath
 
-        # Now install the dependencies
         & "$env:VCPKG_ROOT\vcpkg.exe" install boost-json:$env:TRIPLET --recurse
 
     - name: Configure CMake
@@ -74,7 +72,7 @@ jobs:
         cd build
         cmake -G "Visual Studio 17 2022" -A x64 .. `
           -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}\vcpkg\scripts\buildsystems\vcpkg.cmake `
-          -DVCPKG_TARGET_TRIPLET=x64-windows-booststatic `
+          -DVCPKG_TARGET_TRIPLET=$env:TRIPLET `
           -DCMAKE_BUILD_TYPE=Release
 
     - name: Build Project
@@ -88,4 +86,4 @@ jobs:
       with:
         files: build/Release/*.exe
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # or use a custom token if required
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
