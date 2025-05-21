@@ -5,9 +5,12 @@ set(PATCH_VERSION "1" CACHE INTERNAL "Patch version")
 set(PROJECT_VERSION 0.0.${PATCH_VERSION})
 project(smax_tray_client VERSION ${PROJECT_VERSION} LANGUAGES CXX)
 
-# MSVC Runtime: statically link C++ runtime
+# MSVC Runtime: dynamically link C++ runtime (runtime-link=shared)
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
+
+# Override in Debug if needed
 if(MSVC)
-    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
 endif()
 
 add_definitions(-DUNICODE -D_UNICODE)
@@ -17,6 +20,11 @@ cmake_policy(SET CMP0144 NEW)
 cmake_policy(SET CMP0167 OLD)
 
 # Boost (vcpkg will handle it)
+# Equivalent to: --with-json link=static
+# Boost_USE_STATIC_LIBS ensures link=static
+set(Boost_USE_STATIC_LIBS ON)
+set(Boost_USE_MULTITHREADED ON)
+set(Boost_USE_STATIC_RUNTIME OFF) # runtime-link=shared
 find_package(Boost REQUIRED COMPONENTS json)
 
 # Executable and source files

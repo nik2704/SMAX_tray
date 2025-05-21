@@ -26,11 +26,18 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-vcpkg-static-
 
+    - name: Create custom vcpkg triplet for static Boost + shared CRT
+      shell: pwsh
+      run: |
+        $tripletDir = "${{ github.workspace }}\vcpkg\triplets\community"
+        New-Item -ItemType Directory -Force -Path $tripletDir | Out-Null
+        Set-Content -Path "$tripletDir\x64-windows-booststatic.cmake" -Value @"set(VCPKG_TARGET_ARCHITECTURE x64) set(VCPKG_CRT_LINKAGE dynamic) set(VCPKG_LIBRARY_LINKAGE static)"@
+
     - name: Install vcpkg and Boost.Json (Static)
       shell: pwsh
       run: |
         $env:VCPKG_ROOT = "${{ github.workspace }}\vcpkg"
-        $env:TRIPLET = "x64-windows-static"
+        $env:TRIPLET = "x64-windows-booststatic"
 
         if (-not (Test-Path "$env:VCPKG_ROOT\vcpkg.exe")) {
           git clone https://github.com/microsoft/vcpkg.git $env:VCPKG_ROOT
@@ -46,7 +53,7 @@ jobs:
         cd build
         cmake -G "Visual Studio 17 2022" -A x64 .. `
           -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}\vcpkg\scripts\buildsystems\vcpkg.cmake `
-          -DVCPKG_TARGET_TRIPLET=x64-windows-static `
+          -DVCPKG_TARGET_TRIPLET=x64-windows-booststatic `
           -DCMAKE_BUILD_TYPE=Release
 
     - name: Build Project
@@ -60,4 +67,5 @@ jobs:
       with:
         files: build/Release/*.exe
       env:
-        GITHUB_TOKEN: ${{ secrets.MY_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # or use a custom token if required
+        
