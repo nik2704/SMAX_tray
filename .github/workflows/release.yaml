@@ -48,6 +48,8 @@ jobs:
       run: |
         $env:VCPKG_ROOT = "${{ github.workspace }}\vcpkg"
         $env:TRIPLET = "x64-windows-booststatic"
+        # Set VCPKG_OVERLAY_TRIPLETS to include your custom triplet directory
+        $env:VCPKG_OVERLAY_TRIPLETS = "${{ github.workspace }}\vcpkg\triplets\community"
 
         $bootstrapScriptPath = "$env:VCPKG_ROOT\bootstrap-vcpkg.bat"
 
