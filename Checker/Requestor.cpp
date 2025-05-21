@@ -95,7 +95,7 @@ std::optional<std::string> Requestor::get(const std::string& url, const std::str
         return std::nullopt;
     }
 
-    if (!HttpSendRequestA(hRequest, headers.c_str(), headers.length(), NULL, 0)) {
+    if (!HttpSendRequestA(hRequest, headers.c_str(), static_cast<DWORD>(headers.length()), NULL, 0)) {
         InternetCloseHandle(hRequest);
         InternetCloseHandle(hConnect);
         InternetCloseHandle(hInternet);

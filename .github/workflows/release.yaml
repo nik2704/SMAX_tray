@@ -1,30 +1,22 @@
 name: Windows Build and Package
 
-# Triggers the workflow on pushes to the 'main' branch
 on:
   push:
     branches:
-      - main # Or 'master', depending on your default branch name
+      - main
 
 jobs:
   build-windows:
-    # Specifies the operating system for the job
-    runs-on: windows-latest # Uses the latest available Windows runner image
+    runs-on: windows-latest
 
     steps:
     - name: Checkout Repository
-      # Uses the actions/checkout@v4 action to clone your repository's code
       uses: actions/checkout@v4
 
     - name: Setup MSBuild and MSVC
-      # Uses the microsoft/setup-msbuild@v1.1 action to configure the
-      # Visual Studio development environment, including MSBuild and MSVC tools.
       uses: microsoft/setup-msbuild@v1.1
 
     - name: Cache vcpkg and Installed Packages
-      # Caches the vcpkg tool itself and its installed packages to speed up
-      # subsequent workflow runs. The cache key includes the OS and a hash
-      # of CMakeLists.txt to ensure the cache is invalidated if dependencies change.
       uses: actions/cache@v3
       with:
         path: |
@@ -34,87 +26,52 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-vcpkg-
 
-    - name: Install vcpkg and Boost
-      # This step handles the installation of vcpkg (a C++ package manager)
-      # and then uses it to install the 'boost-json' library.
-      # Caching is used to speed up subsequent workflow runs by reusing
-      # previously installed vcpkg and its packages.
-      id: vcpkg_install
+    - name: Install vcpkg and Boost.Json
+      shell: pwsh
       run: |
-        # Define VCPKG_ROOT environment variable for this step and subsequent ones.
-        # This points to where vcpkg will be installed and its packages.
         $env:VCPKG_ROOT = "${{ github.workspace }}\vcpkg"
 
-        # Check if vcpkg already exists in the cache directory.
-        # If not, clone and bootstrap vcpkg.
         if (-not (Test-Path "$env:VCPKG_ROOT\vcpkg.exe")) {
-          Write-Host "vcpkg not found in cache, installing..."
+          Write-Host "Cloning and bootstrapping vcpkg..."
           git clone https://github.com/microsoft/vcpkg.git $env:VCPKG_ROOT
           & "$env:VCPKG_ROOT\bootstrap-vcpkg.bat"
         } else {
-          Write-Host "vcpkg found in cache, skipping clone and bootstrap."
+          Write-Host "vcpkg already present."
         }
 
-        # Install Boost.Json for x64 Windows.
-        # --recurse ensures all dependencies of boost-json are also installed.
-        # Removed --x-acquire-native-tools as it's no longer a valid option.
-        Write-Host "Installing boost-json:x64-windows via vcpkg..."
+        Write-Host "Installing boost-json..."
         & "$env:VCPKG_ROOT\vcpkg.exe" install boost-json:x64-windows --recurse
-      shell: pwsh # Specifies PowerShell as the shell for this step
 
     - name: Configure CMake
-      # Configures the CMake project.
+      shell: pwsh
       run: |
-        mkdir build # Create a build directory
+        mkdir build
         cd build
-        # Run CMake:
-        # -G "Visual Studio 17 2022" specifies the generator for Visual Studio 2022.
-        # -A x64 specifies the target architecture as x64.
-        # -DCMAKE_TOOLCHAIN_FILE points CMake to the vcpkg toolchain file,
-        # which helps CMake find the libraries installed by vcpkg.
-        cmake -G "Visual Studio 17 2022" -A x64 .. -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}\vcpkg\scripts\buildsystems\vcpkg.cmake
-      shell: pwsh # Specifies PowerShell as the shell for this step
+        cmake -G "Visual Studio 17 2022" -A x64 .. `
+          -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}\vcpkg\scripts\buildsystems\vcpkg.cmake `
+          -DCMAKE_BUILD_TYPE=Release
 
     - name: Build Project
-      # Builds the project using CMake's build command.
+      shell: pwsh
       run: |
         cd build
-        # Builds the project in 'Release' configuration.
         cmake --build . --config Release
-      shell: pwsh # Specifies PowerShell as the shell for this step
 
     - name: Run Tests (Optional)
-      # This is a placeholder for running tests.
-      # If you have CTest tests defined in your CMakeLists.txt, you can uncomment
-      # and modify the commands below to execute them.
-      run: Write-Host "No CTest tests defined in CMakeLists.txt. Skipping test step."
-      # Example for running CTest:
-      # run: |
-      #   cd build
-      #   ctest --output-on-failure # Runs all tests and shows output for failures
-      # shell: pwsh
+      shell: pwsh
+      run: |
+        Write-Host "No tests defined. Skipping..."
+        # cd build
+        # ctest --output-on-failure
 
-    - name: Install NSIS
-      # Installs Nullsoft Scriptable Install System (NSIS) using Chocolatey.
-      # NSIS is required by CPack to generate the Windows installer (.exe).
-      uses: chocolatey/choco-action@v1
-      with:
-        name: nsis
-        version: '3.09' # You can specify a specific version or omit for latest
-
-    - name: Create Windows Installer with CPack
-      # Runs CPack to generate the installer based on the configuration in CMakeLists.txt.
+    - name: Create NSIS Installer with CPack
+      shell: pwsh
       run: |
         cd build
-        # CPack will use the 'NSIS' generator configured in CMakeLists.txt
-        # to create the executable installer.
         cpack -C Release -G NSIS
-      shell: pwsh # Specifies PowerShell as the shell for this step
 
-    - name: Upload Artifacts
-      # Uploads the generated installer executable as a workflow artifact.
-      # This makes the installer available for download from the GitHub Actions run summary.
+    - name: Upload Installer Artifact
       uses: actions/upload-artifact@v4
       with:
         name: smax-tray-client-windows-installer
-        path: build/*.exe # Path to the generated NSIS installer .exe file
+        path: build/*.exe
