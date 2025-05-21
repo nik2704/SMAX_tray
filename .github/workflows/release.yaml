@@ -48,7 +48,8 @@ jobs:
       run: |
         $env:VCPKG_ROOT = "${{ github.workspace }}\vcpkg"
         $env:TRIPLET = "x64-windows-booststatic"
-        # Set VCPKG_OVERLAY_TRIPLETS to include your custom triplet directory
+
+        # Set VCPKG_OVERLAY_TRIPLETS here, ensuring it's available for vcpkg.exe
         $env:VCPKG_OVERLAY_TRIPLETS = "${{ github.workspace }}\vcpkg\triplets\community"
 
         $bootstrapScriptPath = "$env:VCPKG_ROOT\bootstrap-vcpkg.bat"
@@ -65,6 +66,7 @@ jobs:
 
         & $bootstrapScriptPath
 
+        # Ensure VCPKG_OVERLAY_TRIPLETS is set before invoking vcpkg.exe
         & "$env:VCPKG_ROOT\vcpkg.exe" install boost-json:$env:TRIPLET --recurse
 
     - name: Configure CMake
