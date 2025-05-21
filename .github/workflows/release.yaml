@@ -44,9 +44,9 @@ jobs:
 
         # Install Boost.Json for x64 Windows.
         # --recurse ensures all dependencies of boost-json are also installed.
-        # --x-acquire-native-tools ensures necessary build tools for vcpkg are acquired.
+        # Removed --x-acquire-native-tools as it's no longer a valid option.
         Write-Host "Installing boost-json:x64-windows via vcpkg..."
-        & "$env:VCPKG_ROOT\vcpkg.exe" install boost-json:x64-windows --recurse --x-acquire-native-tools
+        & "$env:VCPKG_ROOT\vcpkg.exe" install boost-json:x64-windows --recurse
       shell: pwsh # Specifies PowerShell as the shell for this step
 
     - name: Configure CMake
