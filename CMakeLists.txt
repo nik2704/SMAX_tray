@@ -1,30 +1,27 @@
 cmake_minimum_required(VERSION 3.12)
 
 # Project versioning
-set(PATCH_VERSION "1" CACHE INTERNAL "Patch version")
-set(PROJECT_VERSION 0.0.${PATCH_VERSION})
-project(smax_tray_client VERSION ${PROJECT_VERSION} LANGUAGES CXX)
+set(PROJECT_VERSION_MAJOR 0)
+set(PROJECT_VERSION_MINOR 0)
+set(PROJECT_VERSION_PATCH 1 CACHE INTERNAL "Patch version")
+project(smax_tray_client VERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH} LANGUAGES CXX)
 
-# MSVC Runtime: dynamically link C++ runtime (runtime-link=shared)
-set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
-
-# Override in Debug if needed
+# MSVC Runtime: dynamically link C++ runtime
 if(MSVC)
-    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
+    if(CMAKE_BUILD_TYPE MATCHES Debug)
+        set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDebugDLL")
+    endif()
 endif()
 
-add_definitions(-DUNICODE -D_UNICODE)
+# Unicode defines
+add_compile_definitions(UNICODE _UNICODE)
 
 # CMake policies
 cmake_policy(SET CMP0144 NEW)
 cmake_policy(SET CMP0167 OLD)
 
-# Boost (vcpkg will handle it)
-# Equivalent to: --with-json link=static
-# Boost_USE_STATIC_LIBS ensures link=static
-set(Boost_USE_STATIC_LIBS ON)
-set(Boost_USE_MULTITHREADED ON)
-set(Boost_USE_STATIC_RUNTIME OFF) # runtime-link=shared
+# Boost (vcpkg handles static/dynamic, so just find json component)
 find_package(Boost REQUIRED COMPONENTS json)
 
 # Executable and source files
@@ -52,7 +49,7 @@ target_include_directories(smax_tray_client PRIVATE
 target_link_libraries(smax_tray_client PRIVATE
     Boost::json
     crypt32
-    Shlwapi.lib
+    Shlwapi
 )
 
 set_target_properties(smax_tray_client PROPERTIES
@@ -63,10 +60,10 @@ set_target_properties(smax_tray_client PROPERTIES
 # Installation
 install(TARGETS smax_tray_client DESTINATION bin)
 
-# Optional: Copy Boost DLLs if using shared linking (safe fallback)
-install(DIRECTORY "${CMAKE_SOURCE_DIR}/vcpkg/installed/x64-windows/bin/"
-        DESTINATION bin
-        FILES_MATCHING PATTERN "*.dll")
+# Optional: Copy Boost DLLs if using shared libs (commented out for static linkage)
+# install(DIRECTORY "${CMAKE_SOURCE_DIR}/vcpkg/installed/x64-windows/bin/"
+#         DESTINATION bin
+#         FILES_MATCHING PATTERN "*.dll")
 
 # NSIS packaging
 include(InstallRequiredSystemLibraries)
@@ -75,9 +72,9 @@ set(CPACK_GENERATOR NSIS)
 set(CPACK_PACKAGE_NAME "SMAX Tray Client")
 set(CPACK_PACKAGE_VENDOR "OT")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "SMAX Tray Utility for Windows")
-set(CPACK_PACKAGE_VERSION_MAJOR "${PROJECT_VERSION_MAJOR}")
-set(CPACK_PACKAGE_VERSION_MINOR "${PROJECT_VERSION_MINOR}")
-set(CPACK_PACKAGE_VERSION_PATCH "${PROJECT_VERSION_PATCH}")
+set(CPACK_PACKAGE_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
+set(CPACK_PACKAGE_VERSION_MINOR ${PROJECT_VERSION_MINOR})
+set(CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
 set(CPACK_PACKAGE_CONTACT "example@example.com")
 set(CPACK_NSIS_DISPLAY_NAME "SMAX Tray Client")
 set(CPACK_NSIS_PACKAGE_NAME "SMAX_Tray_Client")
