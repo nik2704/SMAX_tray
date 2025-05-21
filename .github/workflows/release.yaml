@@ -31,7 +31,11 @@ jobs:
       run: |
         $tripletDir = "${{ github.workspace }}\vcpkg\triplets\community"
         New-Item -ItemType Directory -Force -Path $tripletDir | Out-Null
-        Set-Content -Path "$tripletDir\x64-windows-booststatic.cmake" -Value @"set(VCPKG_TARGET_ARCHITECTURE x64) set(VCPKG_CRT_LINKAGE dynamic) set(VCPKG_LIBRARY_LINKAGE static)"@
+        Set-Content -Path "$tripletDir\x64-windows-booststatic.cmake" -Value @"
+        set(VCPKG_TARGET_ARCHITECTURE x64)
+        set(VCPKG_CRT_LINKAGE dynamic)
+        set(VCPKG_LIBRARY_LINKAGE static)
+        "@
 
     - name: Install vcpkg and Boost.Json (Static)
       shell: pwsh
@@ -68,4 +72,4 @@ jobs:
         files: build/Release/*.exe
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # or use a custom token if required
-        
+
