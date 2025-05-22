@@ -50,7 +50,6 @@ smax_tray_client/
 ├── resource.h
 └──  resources.rc
 ```
-
 ---
 
 ## ✨ Features
