@@ -16,17 +16,15 @@ jobs:
     - name: Setup MSBuild and MSVC
       uses: microsoft/setup-msbuild@v1.1
 
-    - name: Cache vcpkg and Installed Packages
+    - name: Cache vcpkg
       uses: actions/cache@v3
       with:
-        path: |
-          ${{ github.workspace }}\vcpkg
-          ${{ github.workspace }}\vcpkg\installed
+        path: ${{ github.workspace }}\vcpkg
         key: ${{ runner.os }}-vcpkg-${{ hashFiles('**/CMakeLists.txt') }}
         restore-keys: |
           ${{ runner.os }}-vcpkg-
 
-    - name: Install vcpkg and Boost.Json (Static)
+    - name: Install vcpkg
       shell: pwsh
       run: |
         $env:VCPKG_ROOT = "${{ github.workspace }}\vcpkg"
@@ -39,19 +37,15 @@ jobs:
           Write-Host "vcpkg already present."
         }
 
-        Write-Host "Installing boost-json (static)..."
-        & "$env:VCPKG_ROOT\vcpkg.exe" install boost-json:x64-windows-static --recurse
+        Write-Host "Skipping boost-json installation."
 
-    - name: Configure CMake (Forced Static Boost + Static Runtime)
+    - name: Configure CMake
       shell: pwsh
       run: |
         cmake -S . -B build `
           -G "Visual Studio 17 2022" -A x64 `
           -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}\vcpkg\scripts\buildsystems\vcpkg.cmake `
-          -DCMAKE_BUILD_TYPE=Release `
-          -DBoost_USE_STATIC_LIBS=ON `
-          -DBoost_USE_STATIC_RUNTIME=ON `
-          -DCMAKE_MSVC_RUNTIME_LIBRARY="MultiThreaded"
+          -DCMAKE_BUILD_TYPE=Release
 
     - name: Build Project
       shell: pwsh

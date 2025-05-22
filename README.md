@@ -10,11 +10,6 @@ When new requests appear, it notifies the user with a system tray notification.
 
 ```
 smax_tray_client/
-├── CMakeLists.txt
-├── main.cpp
-├── config.ini
-├── resource.h
-├── resources.rc
 ├── icons/
 │   ├── RequestInitial.ico
 │   └── RequestNewItems.ico
@@ -23,14 +18,37 @@ smax_tray_client/
 |   ├── Utils.h
 |   └── SimpleIni.h
 ├── Checker/
+|   ├── ConfigManager
+|   |   ├── ConfigInitializer
+|   |   |   ├── ConfigInitializer.h
+|   |   |   ├── ConfigInitializer.cpp
+|   |   |   └── ConfigInitializerDialog.rc
+|   ├── JSONhelper
+|   |   ├── CMakeLists.txt
+|   |   ├── json_builder.h
+|   |   ├── json_builder.cpp
+|   |   ├── json.h
+|   |   ├── json.cpp
+|   |   ├── JSONhelper.h
+|   |   └── JSONhelper.cpp
+|   ├── NetworkClient
+|   |   ├── NetworkClient.h
+|   |   └── NetworkClient.cpp
+|   ├── TrayManager
+|   |   ├── TrayManager.h
+|   |   └── TrayManager.cpp
+|   ├── Worker
+|   |   ├── Worker.h
+|   |   └── Worker.cpp
 |   ├── Checker.h
 |   ├── Checker.cpp
 |   ├── Requestor.h
 |   └── Requestor.cpp
-└── TokenInitializer
-    ├── TokenDialog.rc
-    ├── TokenDialog.cpp
-    └── TokenDialog.h
+├── CMakeLists.txt
+├── main.cpp
+├── config.ini
+├── resource.h
+└──  resources.rc
 ```
 
 ---
