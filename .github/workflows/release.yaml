@@ -3,7 +3,7 @@ name: Windows Build and Package
 on:
   push:
     tags:
-      - 'v*'
+      - 'v*'  # Triggers only on version tags like v1.0.0
 
 jobs:
   build-windows:
@@ -33,6 +33,11 @@ jobs:
           & "$env:VCPKG_ROOT\bootstrap-vcpkg.bat"
         }
 
+    - name: Ensure NSIS is Installed
+      shell: pwsh
+      run: |
+        choco install nsis -y
+
     - name: Configure CMake
       shell: pwsh
       run: |
@@ -57,9 +62,16 @@ jobs:
         cd build
         cpack -G NSIS
 
+    - name: Upload NSISOutput.log on failure
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: NSISOutputLog
+        path: build/_CPack_Packages/win64/NSIS/NSISOutput.log
+
     - name: Upload Installer to GitHub Release
       uses: softprops/action-gh-release@v2
       with:
-        files: build/*.exe  # This will include the NSIS installer
+        files: build/*.exe  # Adjust path if needed (e.g. _CPack_Packages/win64/NSIS/*.exe)
       env:
         GITHUB_TOKEN: ${{ secrets.MY_TOKEN }}
