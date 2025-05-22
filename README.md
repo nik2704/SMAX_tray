@@ -95,7 +95,6 @@ Stoken=-init-
 
 - Windows OS
 - CMake ≥ 3.12
-- Boost (specifically Boost.JSON)
 - C++17-compatible compiler
 
 ---
