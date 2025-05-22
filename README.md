@@ -144,3 +144,4 @@ This project is released under the MIT License. See `LICENSE` for details.
 ## 👤 Author
 
 Created by [Nikolay]. For questions or feedback, contact: [nik2704@yandex.ru].
+
