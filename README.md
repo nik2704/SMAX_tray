@@ -12,7 +12,8 @@ When new requests appear, it notifies the user with a system tray notification.
 smax_tray_client/
 ├── icons/
 │   ├── RequestInitial.ico
-│   └── RequestNewItems.ico
+│   ├── RequestNewItems.ico
+│   └── Error.ico
 ├── Utils
 |   ├── Utils.cpp
 |   ├── Utils.h
