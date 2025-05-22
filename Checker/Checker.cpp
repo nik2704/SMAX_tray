@@ -3,10 +3,9 @@
 #include "../Utils/SimpleIni.h"
 #include "../Utils/Utils.h"
 #include "../TokenInitializer/TokenInitializer.h"
-#include "Requestor.h"
+#include "NetworkClient/NetworkClient.h"
 #include "../resource.h"
 
-#include <boost/json.hpp>
 #include <shellapi.h>
 #include <wininet.h>
 #include <sstream>
@@ -22,7 +21,6 @@
 STARTUPINFO si = { sizeof(STARTUPINFO) };
 PROCESS_INFORMATION pi;
 
-namespace json = boost::json;
 namespace smax {
 
 Checker& Checker::getInstance() {
@@ -95,12 +93,12 @@ void Checker::runWorker() {
         std::unique_lock<std::mutex> lock(mutex_);
         while (running_) {
             lock.unlock();
-            std::string encoded_filter = urlEncode(filter_);
-            std::string smax_url = url_ + "&filter=" + encoded_filter;
+            std::string encoded_filter = urlEncode(config_->getFilter());
+            std::string smax_url = config_->getUrl() + "&filter=" + encoded_filter;
             sendGET(smax_url);
             lock.lock();
 
-            cv_.wait_for(lock, std::chrono::seconds(period_), [this]() { return !running_; });
+            cv_.wait_for(lock, std::chrono::seconds(config_->getPeriod()), [this]() { return !running_; });
         }
     });
 }
@@ -175,7 +173,8 @@ LRESULT CALLBACK Checker::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
                 if (cmd == 1) {
                     PostMessage(hwnd, WM_CLOSE, 0, 0);
                 } else if (cmd == 2) {
-                    wURL = std::wstring(Checker::getInstance().portalURL_.begin(), Checker::getInstance().portalURL_.end());
+                    const auto& portalURL = Checker::getInstance().getConfig()->getPortalURL();
+                    wURL = std::wstring(portalURL.begin(), portalURL.end());
                     ShellExecute(hwnd, L"open", wURL.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
                     Checker::getInstance().acknowledge();
                 } else if (cmd == 3) {
@@ -199,68 +198,21 @@ LRESULT CALLBACK Checker::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 }
 
 void Checker::readConfig() {
-    CSimpleIniW ini;
-    processedIDs_ = std::set<std::string>();
+    std::string iniPath = wideToUtf8(iniFile_.c_str());
 
-    ini.LoadFile(iniFile_.c_str());
-
-    period_ = std::stoi(ini.GetValue(L"Settings", L"period", L"60"));
-    auto instance = ini.GetValue(L"Settings", L"instance", L"");
-    
-    auto ini_hostname = to_utf8(ini.GetValue(instance, L"hostname", L""));
-    auto ini_tenantId = to_utf8(ini.GetValue(instance, L"tenantId", L""));
-
-    auto userNameHexW = ini.GetValue(instance, L"userName", L"");
-    userName_ = getDecryptedString(userNameHexW);
-    filter_ = "Active=true and OwnedByPerson.Upn='" + userName_ + "'";
-
-    auto tokenHexW = ini.GetValue(instance, L"token", L"");
-    token_ = getDecryptedString(tokenHexW);
-
-    url_ = "https://" + ini_hostname + "/rest/" + ini_tenantId + "/ems/Request?layout=Id";
-    portalURL_ = "https://" + ini_hostname + "/saw/Requests?TENANTID=" + ini_tenantId;    
-}
-
-std::string Checker::to_utf8(const wchar_t* wstr) {
-    int len = WideCharToMultiByte(CP_UTF8, 0, wstr, -1, nullptr, 0, nullptr, nullptr);
-    std::string result(len - 1, '\0');
-    WideCharToMultiByte(CP_UTF8, 0, wstr, -1, &result[0], len, nullptr, nullptr);
-    return result;
-}
-
-std::vector<std::string> Checker::extract_ids_from_json(const std::string& json_str) {
-    std::vector<std::string> ids;
-
-    try {
-        json::value jv = json::parse(json_str);
-        json::object root = jv.as_object();
-
-        if (root.contains("entities") && root["entities"].is_array()) {
-            const json::array& entities = root["entities"].as_array();
-
-            for (const auto& entity_val : entities) {
-                if (!entity_val.is_object()) continue;
-                const json::object& entity = entity_val.as_object();
-
-                if (entity.contains("properties") && entity.at("properties").is_object()) {
-                    const json::object& props = entity.at("properties").as_object();
-
-                    if (props.contains("Id")) {
-                        const auto& id_val = props.at("Id");
-                        if (id_val.is_string()) {
-                            ids.push_back(id_val.as_string().c_str());
-                        } else if (id_val.is_int64() || id_val.is_uint64() || id_val.is_double()) {
-                            ids.push_back(json::serialize(id_val));
-                        }
-                    }
-                }
-            }
+    config_ = std::make_unique<ConfigManager>(
+        iniPath, 
+        [](const std::wstring& wstr) -> std::string {
+            return getDecryptedString(wstr.c_str());
+        },
+        [this](const std::wstring& wstr) -> std::string {
+            return wideToUtf8(wstr.c_str());
         }
-    } catch (const std::exception& ex) {
-        std::cerr << "Error parsing JSON: " << ex.what() << std::endl;
-    }
+    );
+}
 
-    return ids;
+ConfigManager* Checker::getConfig() const {
+    return config_.get();
 }
 
 size_t Checker::update_processed_ids(const std::vector<std::string>& ids) {
@@ -289,11 +241,11 @@ size_t Checker::update_processed_ids(const std::vector<std::string>& ids) {
 }
 
 void Checker::sendGET(const std::string& url) {
-    auto result = Requestor::get(url, userName_, token_);
+    auto result = NetworkClient::get(url, config_->getUserName(), config_->getToken());
     dismissAlert();
     
     if (result.has_value()) {
-        auto ids = extract_ids_from_json(result.value());
+        auto ids = NetworkClient::extractIDsFromJSON(result.value());
         auto newElements = update_processed_ids(ids);
 
         if (newElements > 0) {

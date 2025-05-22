@@ -6,6 +6,7 @@ set(PROJECT_VERSION 0.0.${PATCH_VERSION})
 
 project(smax_tray_client VERSION ${PROJECT_VERSION} LANGUAGES CXX)
 
+
 # ✅ Statically link the C++ runtime if using MSVC
 if(MSVC)
     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
@@ -14,17 +15,9 @@ endif()
 
 add_definitions(-DUNICODE -D_UNICODE)
 
-
-# Boost configuration
-set(BOOST_ROOT "C:/boost/boost_1_87_0")
-set(Boost_NO_SYSTEM_PATHS ON)
-
 # CMake policies
 cmake_policy(SET CMP0144 NEW)  # New behavior for CMAKE_INSTALL_INCLUDEDIR etc.
 cmake_policy(SET CMP0167 OLD)  # Disable transitive LTO
-
-# Find Boost
-find_package(Boost 1.87 REQUIRED COMPONENTS json)
 
 # Executable and source files
 add_executable(smax_tray_client WIN32
@@ -32,24 +25,32 @@ add_executable(smax_tray_client WIN32
     TokenInitializer/TokenInitializer.cpp
     TokenInitializer/TokenDialog.rc    
     Checker/Checker.cpp
-    Checker/Requestor.cpp
+
+    Checker/JSONhelper/json_builder.cpp
+    Checker/JSONhelper/json.cpp
+    Checker/JSONhelper/JSONhelper.cpp
+    Checker/NetworkClient/NetworkClient.cpp
+    Checker/ConfigManager/ConfigManager.cpp
+
     Utils/Utils.cpp
     resources.rc
 )
 
 # Compiler and linker settings
-target_compile_definitions(smax_tray_client PRIVATE BOOST_ALL_NO_LIB)
+target_compile_definitions(smax_tray_client PRIVATE)
 
 # target_include_directories(smax_tray_client PRIVATE ${Boost_INCLUDE_DIRS})
 target_include_directories(smax_tray_client PRIVATE
-    ${Boost_INCLUDE_DIRS}
     ${CMAKE_CURRENT_SOURCE_DIR}/Checker
+    ${CMAKE_CURRENT_SOURCE_DIR}/Checker/JSONhelper
+    ${CMAKE_CURRENT_SOURCE_DIR}/Checker/NetworkClient
+    ${CMAKE_CURRENT_SOURCE_DIR}/Checker/ConfigManager
     ${CMAKE_CURRENT_SOURCE_DIR}/TokenInitializer
     ${CMAKE_CURRENT_SOURCE_DIR}/SimpleIni
     ${CMAKE_CURRENT_SOURCE_DIR}/Utils
 )
 
-target_link_libraries(smax_tray_client PRIVATE ${Boost_LIBRARIES} crypt32 Boost::json Shlwapi.lib)
+target_link_libraries(smax_tray_client PRIVATE crypt32 Shlwapi.lib)
 
 set_target_properties(smax_tray_client PROPERTIES
     CXX_STANDARD 17

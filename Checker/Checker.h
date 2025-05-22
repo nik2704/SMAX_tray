@@ -10,6 +10,7 @@
 #define _UNICODE
 #endif
 
+#include "ConfigManager/ConfigManager.h"
 #include <thread>
 #include <atomic>
 #include <condition_variable>
@@ -78,6 +79,11 @@ private:
     void readConfig();
 
     /**
+     * @brief Get configuration parameters from the INI file.
+     */
+    ConfigManager* getConfig() const;
+
+    /**
      * @brief Runs the cycle to get information from SMAX.
      */
     void runWorker();
@@ -99,19 +105,12 @@ private:
      */
     std::string urlEncode(const std::string& value);
 
-    /**
-     * @brief Converts a wide-character string to UTF-8.
-     * @param wstr Pointer to the wide-character string.
-     * @return UTF-8 encoded string.
-     */
-    std::string to_utf8(const wchar_t* wstr);
-
-    /**
-     * @brief Parses a JSON string to extract a list of IDs.
-     * @param json_str The JSON-formatted string.
-     * @return Vector of extracted ID strings.
-     */
-    std::vector<std::string> extract_ids_from_json(const std::string& json_str);
+    // /**
+    //  * @brief Converts a wide-character string to UTF-8.
+    //  * @param wstr Pointer to the wide-character string.
+    //  * @return UTF-8 encoded string.
+    //  */
+    // std::string to_utf8(const wchar_t* wstr);
 
     /**
      * @brief Updates the set of already processed IDs.
@@ -146,13 +145,7 @@ private:
     std::condition_variable cv_;
     std::atomic<bool> running_;             ///< Flag indicating if the checker is running.
     std::set<std::string> processedIDs_;    ///< Set of already processed IDs to avoid duplicates.
-
-    std::string url_;                       ///< URL to fetch data from.
-    std::string portalURL_;                 ///< Base portal URL for link.
-    std::string userName_;                  ///< User name used for API authentication or identification.
-    std::string token_;                     ///< API token for authorization.
-    std::string filter_;                    ///< Optional filter string for requests.
-    int period_ = 60;                       ///< Period in seconds between each request.
+    std::unique_ptr<ConfigManager> config_; ///< Responsible for reading and holding configuration values.
 };
 
 } // namespace smax

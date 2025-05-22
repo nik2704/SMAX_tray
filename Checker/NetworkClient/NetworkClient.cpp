@@ -1,4 +1,4 @@
-#include "Requestor.h"
+#include "NetworkClient.h"
 #include <windows.h>
 #include <wininet.h>
 #include <wincrypt.h>
@@ -37,7 +37,7 @@ std::string base64Encode(const std::string& input) {
     return encoded;
 }
 
-std::optional<std::string> Requestor::get(const std::string& url, const std::string& username, const std::string& password) {
+std::optional<std::string> NetworkClient::get(const std::string& url, const std::string& username, const std::string& password) {
     std::string credentials = username + ":" + password;
     std::string encodedAuth = base64Encode(credentials);
     std::string headers = "Authorization: Basic " + encodedAuth + "\r\n"
@@ -137,6 +137,53 @@ std::optional<std::string> Requestor::get(const std::string& url, const std::str
     InternetCloseHandle(hInternet);
 
     return oss.str();
+}
+
+std::vector<std::string> NetworkClient::extractIDsFromJSON(const std::string& json_str) {
+    std::vector<std::string> ids;    
+
+    auto doc = JSONHelper::ParseJSONFromString(json_str);
+
+    if (!doc) {
+        std::cerr << "Error: Failed to parse JSON string." << std::endl;
+        return ids;
+    }
+
+    try {
+        const json::Node& root_node = doc->GetRoot();
+        if (!root_node.IsMap()) return ids;
+
+        const auto& root = root_node.AsMap();
+        auto entities_it = root.find("entities");
+
+        if (entities_it == root.end() || !entities_it->second.IsArray()) return ids;
+
+        const auto& entities = entities_it->second.AsArray();
+
+        for (const auto& entity_val : entities) {
+            if (!entity_val.IsMap()) continue;
+
+            const auto& entity = entity_val.AsMap();
+            auto props_it = entity.find("properties");
+            if (props_it == entity.end() || !props_it->second.IsMap()) continue;
+
+            const auto& props = props_it->second.AsMap();
+            auto id_it = props.find("Id");
+            if (id_it != props.end()) {
+                const auto& id_val = id_it->second;
+                if (id_val.IsString()) {
+                    ids.push_back(id_val.AsString());
+                } else if (id_val.IsInt() || id_val.IsDouble()) {
+                    std::ostringstream oss;
+                    ids.push_back(oss.str());
+                }
+            }
+        }
+    } catch (const std::exception& ex) {
+        std::cerr << "Error extracting IDs: " << ex.what() << std::endl;
+    }
+
+    return ids;
 }
 
 } // namespace smax

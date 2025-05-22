@@ -1,20 +1,25 @@
-/// @file Requestor.h
-/// @brief Declares the smax::Requestor class responsible for performing HTTP GET requests with basic authentication.
+/// @file NetworkClient.h
+/// @brief Declares the smax::NetworkClient class responsible for performing HTTP GET requests with basic authentication.
 
 #pragma once
+
 #include <optional>
 #include <string>
+#include <vector>
+#include "JSONhelper/json.h"
+#include "JSONhelper/json_builder.h"
+#include "JSONhelper/JSONhelper.h"
 
 namespace smax {
 
 /**
- * @class Requestor
+ * @class NetworkClient
  * @brief Provides static methods for making authenticated HTTP GET requests.
  *
- * The Requestor class encapsulates logic for sending GET requests with basic authentication.
+ * The NetworkClient class encapsulates logic for sending GET requests with basic authentication.
  * It returns the response as a string if the request succeeds.
  */
-class Requestor {
+class NetworkClient {
 public:
     /**
      * @brief Sends an HTTP GET request with basic authentication.
@@ -25,6 +30,7 @@ public:
      * @return The response body as a string if the request is successful; std::nullopt otherwise.
      */
     static std::optional<std::string> get(const std::string& url, const std::string& username, const std::string& password);
+    static std::vector<std::string> extractIDsFromJSON(const std::string& json_str);
 };
 
 } // namespace smax
