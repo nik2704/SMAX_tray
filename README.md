@@ -16,7 +16,6 @@ smax_tray_client/
 ├── Utils
 |   ├── Utils.cpp
 |   ├── Utils.h
-|   └── SimpleIni.h
 ├── Checker/
 |   ├── ConfigManager
 |   |   ├── ConfigInitializer
