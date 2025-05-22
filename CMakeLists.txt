@@ -22,10 +22,9 @@ cmake_policy(SET CMP0167 OLD)  # Disable transitive LTO
 # Executable and source files
 add_executable(smax_tray_client WIN32
     main.cpp
-    TokenInitializer/TokenInitializer.cpp
-    TokenInitializer/TokenDialog.rc    
+    Checker/ConfigManager/ConfigInitializer/ConfigInitializer.cpp
+    Checker/ConfigManager/ConfigInitializer/ConfigInitializerDialog.rc    
     Checker/Checker.cpp
-
     Checker/JSONhelper/json_builder.cpp
     Checker/JSONhelper/json.cpp
     Checker/JSONhelper/JSONhelper.cpp
@@ -46,8 +45,8 @@ target_include_directories(smax_tray_client PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/Checker/JSONhelper
     ${CMAKE_CURRENT_SOURCE_DIR}/Checker/NetworkClient
     ${CMAKE_CURRENT_SOURCE_DIR}/Checker/ConfigManager
+    ${CMAKE_CURRENT_SOURCE_DIR}/Checker/ConfigManager/ConfigInitializer
     ${CMAKE_CURRENT_SOURCE_DIR}/Checker/TrayManager
-    ${CMAKE_CURRENT_SOURCE_DIR}/TokenInitializer
     ${CMAKE_CURRENT_SOURCE_DIR}/Worker
     ${CMAKE_CURRENT_SOURCE_DIR}/SimpleIni
     ${CMAKE_CURRENT_SOURCE_DIR}/Utils

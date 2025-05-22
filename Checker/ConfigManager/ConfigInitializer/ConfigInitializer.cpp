@@ -1,4 +1,4 @@
-#include "TokenInitializer.h"
+#include "ConfigInitializer.h"
 #include "..\Utils\Utils.h"
 #include <Shlwapi.h>
 #include <windowsx.h>
@@ -59,7 +59,7 @@ INT_PTR CALLBACK FullInputDlgProc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM 
     return FALSE;
 }
 
-void TokenInitializer::initializeToken(const std::wstring& iniPath) {
+void ConfigInitializer::initializeToken(const std::wstring& iniPath) {
     if (!PathFileExistsW(iniPath.c_str())) {
         if (!generateINI(iniPath)) {
             MessageBoxW(NULL, L"Configuration was not created.", L"Warning", MB_ICONWARNING);
@@ -70,7 +70,7 @@ void TokenInitializer::initializeToken(const std::wstring& iniPath) {
     processINI(iniPath);
 }
 
-bool TokenInitializer::generateINI(const std::wstring& iniPath) {
+bool ConfigInitializer::generateINI(const std::wstring& iniPath) {
     HINSTANCE hInstance = GetModuleHandleW(NULL);
     InputFullData data = {};
     wcscpy_s(data.period, L"60");
@@ -92,7 +92,7 @@ bool TokenInitializer::generateINI(const std::wstring& iniPath) {
     return ini.SaveFile(iniPath.c_str()) >= 0;
 }
 
-void TokenInitializer::UpdateINI(const std::wstring& iniPath) {
+void ConfigInitializer::UpdateINI(const std::wstring& iniPath) {
     HINSTANCE hInstance = GetModuleHandleW(NULL);
     CSimpleIniW ini;
     ini.SetUnicode();
@@ -146,7 +146,7 @@ void TokenInitializer::UpdateINI(const std::wstring& iniPath) {
 }
 
 
-void TokenInitializer::processINI(const std::wstring& iniPath) {
+void ConfigInitializer::processINI(const std::wstring& iniPath) {
     CSimpleIniW ini;
     ini.SetUnicode();
     if (ini.LoadFile(iniPath.c_str()) < 0) {
@@ -207,7 +207,7 @@ INT_PTR CALLBACK InputDlgProc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lPar
     return FALSE;
 }
 
-std::pair<std::wstring, std::wstring> TokenInitializer::promptInput() {
+std::pair<std::wstring, std::wstring> ConfigInitializer::promptInput() {
     const int bufSize = 256;
     wchar_t usernameBuf[bufSize] = {};
     wchar_t tokenBuf[bufSize] = {};

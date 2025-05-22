@@ -2,7 +2,7 @@
 
 #include <windows.h>
 #include <string>
-#include "../Utils/SimpleIni.h"
+#include "../SimpleIni.h"
 
 namespace smax {
 
@@ -32,7 +32,7 @@ struct InputData {
  * This class reads a token placeholder from an INI file, prompts the user for
  * authentication credentials (username and token), and updates the file with encrypted data.
  */
-class TokenInitializer {
+class ConfigInitializer {
 public:
     /**
      * @brief Initializes a user token if not already set in the INI configuration (if token=-init-).
@@ -45,7 +45,8 @@ public:
      * @brief Updates information in the INI file.
      *
      * @param iniPath Full path to the INI file used for configuration.
-     */    static void UpdateINI(const std::wstring& iniPath);
+     */
+    static void UpdateINI(const std::wstring& iniPath);
 
 private:
     /**

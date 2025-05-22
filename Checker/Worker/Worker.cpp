@@ -65,10 +65,7 @@ void Worker::sendGET(const std::string& url) {
         if (newCount > 0) {
             tray_->showInfo(L"New " + std::to_wstring(newCount) + L" requests found!");
             tray_->setIcon(LoadIcon(hInst_, MAKEINTRESOURCE(SMAX_TRAY_ICON_ALERT)));
-        } 
-        // else {
-        //     tray_->setIcon(LoadIcon(hInst_, MAKEINTRESOURCE(SMAX_TRAY_ICON_INIT)));
-        // }
+        }
     } else {
         tray_->showInfo(L"Failed to fetch data from SMAX", L"Error");
         tray_->setIcon(LoadIcon(hInst_, MAKEINTRESOURCE(SMAX_TRAY_ICON_ERROR)));

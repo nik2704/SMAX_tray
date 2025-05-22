@@ -1,7 +1,7 @@
 // Checker.cpp
 #include "Checker.h"
 #include "../Utils/Utils.h"
-#include "../TokenInitializer/TokenInitializer.h"
+#include "../ConfigManager/ConfigInitializer/ConfigInitializer.h"
 #include "NetworkClient/NetworkClient.h"
 #include "../resource.h"
 
@@ -20,7 +20,7 @@ namespace smax {
 Checker& Checker::getInstance() {
     static std::once_flag initFlag;
     std::call_once(initFlag, []() {
-        TokenInitializer::initializeToken(L"config.ini");
+        ConfigInitializer::initializeToken(L"config.ini");
     });
 
     static Checker instance;
@@ -94,7 +94,7 @@ void Checker::acknowledge() {
 void Checker::updateConfiguration() {
     dismissAlert();
 
-    TokenInitializer::UpdateINI(L"config.ini");
+    ConfigInitializer::UpdateINI(L"config.ini");
     readConfig();
 }
 
