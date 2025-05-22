@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 #include <mutex>
-#include <SimpleIni.h>
+#include "SimpleIni.h"
 
 namespace smax {
 /**
