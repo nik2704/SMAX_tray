@@ -99,26 +99,6 @@ private:
      */
     std::string urlEncode(const std::string& value);
 
-    // /**
-    //  * @brief Converts a wide-character string to UTF-8.
-    //  * @param wstr Pointer to the wide-character string.
-    //  * @return UTF-8 encoded string.
-    //  */
-    // std::string to_utf8(const wchar_t* wstr);
-
-    /**
-     * @brief Updates the set of already processed IDs.
-     * @param ids The list of IDs from the latest fetch.
-     * @return Number of new IDs that were not previously processed.
-     */
-    size_t update_processed_ids(const std::vector<std::string>& ids);
-
-    /**
-     * @brief Sends a GET request to the specified URL.
-     * @param url The full URL to request.
-     */
-    void sendGET(const std::string& url);
-
     /**
      * @brief Windows message handler for the hidden notification window.
      */
@@ -127,9 +107,7 @@ private:
     std::wstring iniFile_;                  ///< Path to the INI configuration file.
     std::unique_ptr<TrayManager> tray_;     ///< Tray manager for system tray notifications.
     HINSTANCE hInst_ = nullptr;             ///< Application instance handle.
-    // std::thread worker_;                    ///< Background worker thread.
     std::unique_ptr<Worker> worker_;        ///< Background worker for periodic tasks.
-    std::set<std::string> processedIDs_;    ///< Set of already processed IDs to avoid duplicates.
     std::shared_ptr<ConfigManager> config_; ///< Responsible for reading and holding configuration values.
 };
 

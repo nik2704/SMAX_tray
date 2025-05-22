@@ -145,64 +145,23 @@ LRESULT CALLBACK Checker::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 void Checker::readConfig() {
     std::string iniPath = wideToUtf8(iniFile_.c_str());
 
-    config_ = std::make_shared<ConfigManager>(
-        iniPath, 
-        [](const std::wstring& wstr) -> std::string {
-            return getDecryptedString(wstr.c_str());
-        },
-        [this](const std::wstring& wstr) -> std::string {
-            return wideToUtf8(wstr.c_str());
-        }
-    );
+    if (!config_) {
+        config_ = std::make_shared<ConfigManager>(
+            iniPath, 
+            [](const std::wstring& wstr) -> std::string {
+                return getDecryptedString(wstr.c_str());
+            },
+            [this](const std::wstring& wstr) -> std::string {
+                return wideToUtf8(wstr.c_str());
+            }
+        );
+    } else {
+        config_->readConfig();
+    }
 }
 
 ConfigManager* Checker::getConfig() const {
     return config_.get();
-}
-
-size_t Checker::update_processed_ids(const std::vector<std::string>& ids) {
-    std::set<std::string> current(ids.begin(), ids.end());
-
-    size_t new_count = 0;
-    for (const auto& id : current) {
-        if (processedIDs_.find(id) == processedIDs_.end()) {
-            ++new_count;
-        }
-    }
-
-    for (const auto& id : current) {
-        processedIDs_.insert(id);
-    }
-
-    for (auto it = processedIDs_.begin(); it != processedIDs_.end(); ) {
-        if (current.find(*it) == current.end()) {
-            it = processedIDs_.erase(it);
-        } else {
-            ++it;
-        }
-    }
-
-    return new_count;
-}
-
-void Checker::sendGET(const std::string& url) {
-    auto result = NetworkClient::get(url, config_->getUserName(), config_->getToken());
-    dismissAlert();
-    
-    if (result.has_value()) {
-        auto ids = NetworkClient::extractIDsFromJSON(result.value());
-        auto newElements = update_processed_ids(ids);
-
-        if (newElements > 0) {
-            tray_->showInfo(L"New " + std::to_wstring(newElements) + L" requests found!");
-            tray_->setIcon(LoadIcon(hInst_, MAKEINTRESOURCE(SMAX_TRAY_ICON_ALERT)));
-        } else {
-            tray_->setIcon(LoadIcon(hInst_, MAKEINTRESOURCE(SMAX_TRAY_ICON_INIT)));
-        }
-    } else {
-        tray_->showInfo(L"Failed to fetch data from SMAX", L"Error");
-        tray_->setIcon(LoadIcon(hInst_, MAKEINTRESOURCE(SMAX_TRAY_ICON_ERROR)));
-    }
 }
 
 } // namespace smax

@@ -21,7 +21,9 @@ public:
     std::string getUserName() const;
     std::string getToken() const;
     std::string getFilter() const;
+    
     int getPeriod() const;
+    void readConfig();
 
     ConfigManager(const ConfigManager&) = delete;
     ConfigManager& operator=(const ConfigManager&) = delete;    
@@ -36,8 +38,6 @@ private:
     std::string token_;                     ///< API token for authorization.
     std::string filter_;                    ///< Optional filter string for requests.
     int period_ = 60;                       ///< Period in seconds between each request.
-
-    void readConfig();
 
     mutable std::mutex mtx_;
 };
