@@ -11,6 +11,7 @@
 #endif
 
 #include "ConfigManager/ConfigManager.h"
+#include "TrayManager/TrayManager.h"
 #include <thread>
 #include <atomic>
 #include <condition_variable>
@@ -126,20 +127,13 @@ private:
     void sendGET(const std::string& url);
 
     /**
-     * @brief Displays a system tray notification with the given message.
-     * @param message The message to display in the notification.
-     */
-    void showNotification(const std::string& message);
-
-    /**
      * @brief Windows message handler for the hidden notification window.
      */
     static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
     std::wstring iniFile_;                  ///< Path to the INI configuration file.
-    HWND hwnd_ = nullptr;                   ///< Handle to the hidden window.
+    std::unique_ptr<TrayManager> tray_;     ///< Tray manager for system tray notifications.
     HINSTANCE hInst_ = nullptr;             ///< Application instance handle.
-    NOTIFYICONDATA nid_ = {};               ///< Notification icon data.
     std::thread worker_;                    ///< Background worker thread.
     std::mutex mutex_;
     std::condition_variable cv_;

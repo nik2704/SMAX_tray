@@ -1,6 +1,5 @@
 // Checker.cpp
 #include "Checker.h"
-#include "../Utils/SimpleIni.h"
 #include "../Utils/Utils.h"
 #include "../TokenInitializer/TokenInitializer.h"
 #include "NetworkClient/NetworkClient.h"
@@ -63,25 +62,13 @@ void Checker::start(HINSTANCE hInstance, const std::wstring& iniFile) {
     hInst_ = hInstance;
     readConfig();
 
-    const wchar_t CLASS_NAME[] = L"SMAXTrayAppClass";
-    WNDCLASS wc = {};
-    wc.lpfnWndProc = WindowProc;
-    wc.hInstance = hInstance;
-    wc.lpszClassName = CLASS_NAME;
-    RegisterClass(&wc);
+    tray_ = std::make_unique<smax::TrayManager>();
+    tray_->initialize(hInstance);
+    tray_->setOnAcknowledge([this]() { this->acknowledge(); });
+    tray_->setOnShutdown([this]() { this->shutdown(); });
+    tray_->setOnUpdateConfig([this]() { this->updateConfiguration(); });
 
-    hwnd_ = CreateWindowEx(0, CLASS_NAME, L"SMAXTrayAppClass", 0, 0, 0, 0, 0, nullptr, nullptr, hInstance, nullptr);
-    if (!hwnd_) return;
-
-    nid_ = {};
-    nid_.cbSize = sizeof(nid_);
-    nid_.hWnd = hwnd_;
-    nid_.uID = 1;
-    nid_.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
-    nid_.uCallbackMessage = WM_USER + 1;
-    nid_.hIcon = LoadIcon(hInst_, MAKEINTRESOURCE(SMAX_TRAY_ICON_INIT));
-    wcscpy_s(nid_.szTip, L"SMAX requests");
-    Shell_NotifyIcon(NIM_ADD, &nid_);
+    tray_->setIcon(LoadIcon(hInstance, MAKEINTRESOURCE(SMAX_TRAY_ICON_INIT)));
 
     running_ = true;
 
@@ -114,36 +101,35 @@ void Checker::stop() {
         worker_.join();
     }
 
-    Shell_NotifyIcon(NIM_DELETE, &nid_);
-    DestroyWindow(hwnd_);
+    if (tray_) {
+        tray_->shutdown();
+        tray_.reset();
+    }
 }
 
 void Checker::shutdown() {
-    running_ = false;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        running_ = false;
+    }
+    cv_.notify_all();
+
     if (worker_.joinable()) {
         worker_.join();
     }
 
-    if (hwnd_) {
-        Shell_NotifyIcon(NIM_DELETE, &nid_);
-        DestroyWindow(hwnd_);
-        hwnd_ = nullptr;
+    if (tray_) {
+        tray_->shutdown();
+        tray_.reset();
     }
 }
 
 void Checker::dismissAlert() {
-    nid_.uFlags |= NIF_INFO;
-    wcscpy_s(nid_.szInfo, L"");
-    wcscpy_s(nid_.szInfoTitle, L"");
-    nid_.dwInfoFlags = NIIF_NONE;
+    tray_->dismissAlert();
 }
 
-
 void Checker::acknowledge() {
-    dismissAlert();
-
-    nid_.hIcon = LoadIcon(hInst_, MAKEINTRESOURCE(SMAX_TRAY_ICON_INIT));
-    Shell_NotifyIcon(NIM_MODIFY, &nid_);
+    tray_->acknowledge();
 }
 
 void Checker::updateConfiguration() {
@@ -249,25 +235,13 @@ void Checker::sendGET(const std::string& url) {
         auto newElements = update_processed_ids(ids);
 
         if (newElements > 0) {
-            showNotification("New " + std::to_string(newElements) + " requests found!");
-            nid_.hIcon = LoadIcon(hInst_, MAKEINTRESOURCE(SMAX_TRAY_ICON_ALERT));
-            Shell_NotifyIcon(NIM_MODIFY, &nid_);
+            tray_->showInfo(L"New " + std::to_wstring(newElements) + L" requests found!");
+            tray_->setIcon(LoadIcon(hInst_, MAKEINTRESOURCE(SMAX_TRAY_ICON_ALERT)));
         }
     } else {
-        showNotification("Failed to fetch data from SMAX");
-
-        nid_.hIcon = LoadIcon(hInst_, MAKEINTRESOURCE(SMAX_TRAY_ICON_ERROR));
-        Shell_NotifyIcon(NIM_MODIFY, &nid_);
+        tray_->showInfo(L"Failed to fetch data from SMAX", L"Error");
+        tray_->setIcon(LoadIcon(hInst_, MAKEINTRESOURCE(SMAX_TRAY_ICON_ERROR)));
     }
-}
-
-void Checker::showNotification(const std::string& message) {
-    nid_.uFlags |= NIF_INFO;
-    std::wstring wMessage(message.begin(), message.end());
-    wcscpy_s(nid_.szInfo, wMessage.c_str());
-    wcscpy_s(nid_.szInfoTitle, L"Notification");
-    nid_.dwInfoFlags = NIIF_INFO;
-    Shell_NotifyIcon(NIM_MODIFY, &nid_);
 }
 
 } // namespace smax
