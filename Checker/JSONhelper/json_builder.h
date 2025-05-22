@@ -1,6 +1,6 @@
 /**
  * @file builder.h
- * @brief Определение класса json::Builder для построения JSON-объектов.
+ * @brief Definition of the json::Builder class for constructing JSON objects.
  */
 
 #pragma once
@@ -13,7 +13,7 @@ namespace json {
 
 /**
  * @class Builder
- * @brief Класс для поэтапного построения JSON-объекта.
+ * @brief Class for step-by-step construction of a JSON object.
  */
 class Builder {
 private:
@@ -23,33 +23,33 @@ private:
     class ArrayItemContext;
 
 public:
-    /** @brief Конструктор по умолчанию. */
+    /** @brief Default constructor. */
     Builder();
     
-    /** @brief Завершает построение JSON и возвращает его корневой узел. */
+    /** @brief Finalizes the JSON construction and returns its root node. */
     Node Build();
     
-    /** @brief Добавляет ключ в объект JSON. */
+    /** @brief Adds a key to the JSON object. */
     DictValueContext Key(std::string key);
     
-    /** @brief Добавляет значение в текущий контейнер. */
+    /** @brief Adds a value to the current container. */
     BaseContext Value(Node::Value value);
     
-    /** @brief Начинает новый объект JSON. */
+    /** @brief Starts a new JSON object. */
     DictItemContext StartDict();
     
-    /** @brief Начинает новый массив JSON. */
+    /** @brief Starts a new JSON array. */
     ArrayItemContext StartArray();
     
-    /** @brief Завершает объект JSON. */
+    /** @brief Ends the current JSON object. */
     BaseContext EndDict();
     
-    /** @brief Завершает массив JSON. */
+    /** @brief Ends the current JSON array. */
     BaseContext EndArray();
 
 private:
-    Node root_;  ///< Корневой узел JSON-объекта.
-    std::vector<Node*> nodes_stack_; ///< Стек текущих узлов JSON.
+    Node root_;  ///< Root node of the JSON object.
+    std::vector<Node*> nodes_stack_; ///< Stack of current JSON nodes.
 
     Node::Value& GetCurrentValue();
     const Node::Value& GetCurrentValue() const;
@@ -58,7 +58,7 @@ private:
     void AddValue(Node::Value value);
     void AddNode(Node::Value value);
     
-    /** @brief Базовый контекст для управления построением JSON. */
+    /** @brief Base context for managing JSON construction. */
     class BaseContext {
     public:
         BaseContext(Builder& builder);
@@ -73,7 +73,7 @@ private:
         Builder& builder_;
     };
     
-    /** @brief Контекст для значения внутри словаря. */
+    /** @brief Context for a value inside a dictionary. */
     class DictValueContext : public BaseContext {
     public:
         DictValueContext(BaseContext base);
@@ -84,7 +84,7 @@ private:
         BaseContext EndArray() = delete;
     };
     
-    /** @brief Контекст внутри словаря, когда ожидается ключ. */
+    /** @brief Context inside a dictionary when a key is expected. */
     class DictItemContext : public BaseContext {
     public:
         DictItemContext(BaseContext base);
@@ -95,7 +95,7 @@ private:
         ArrayItemContext StartArray() = delete;
     };
     
-    /** @brief Контекст для элемента внутри массива. */
+    /** @brief Context for an element inside an array. */
     class ArrayItemContext : public BaseContext {
     public:
         ArrayItemContext(BaseContext base);

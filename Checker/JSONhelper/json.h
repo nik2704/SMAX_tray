@@ -1,9 +1,6 @@
 /**
  * @file json.h
- * @brief Определение классов для работы с JSON-структурами.
- *
- * Этот заголовочный файл содержит определения классов и функций, 
- * необходимых для представления и обработки JSON-данных в C++.
+ * @brief Definition of classes for working with JSON structures.
  */
 
 #pragma once
@@ -16,19 +13,19 @@
 
 /**
  * @namespace json
- * @brief Пространство имен для работы с JSON-объектами.
+ * @brief Namespace for working with JSON objects.
  */
 namespace json {
 
 class Node;
-using Dict = std::map<std::string, Node>; ///< Определение типа JSON-объекта.
-using Array = std::vector<Node>; ///< Определение типа JSON-массива.
+using Dict = std::map<std::string, Node>; ///< Definition of a JSON object type.
+using Array = std::vector<Node>;           ///< Definition of a JSON array type.
 
 /**
- * @brief Контекст для печати, содержащий параметры форматирования.
+ * @brief Print context containing formatting parameters.
  * 
- * Эта структура хранит информацию о потоке вывода, шаге отступа и текущем уровне отступа,
- * а также предоставляет методы для удобного форматирования вывода с отступами.
+ * This structure holds information about the output stream, the indent step, and the current indent level,
+ * and provides methods for convenient formatted output with indentation.
  */
 struct PrintContext {
     std::ostream& out;
@@ -36,40 +33,39 @@ struct PrintContext {
     int indent = 0;
 
     /**
-     * @brief Печатает отступы в соответствии с текущим уровнем вложенности.
+     * @brief Prints indentation according to the current nesting level.
      * 
-     * Метод выводит пробелы в соответствии с текущим значением поля `indent`, что позволяет
-     * отформатировать вывод с нужным количеством пробелов перед текстом.
+     * Outputs spaces matching the current value of the `indent` field, 
+     * allowing formatted output with the correct number of spaces before the text.
      */
     void PrintIndent() const;
 
     /**
-     * @brief Создает новый контекст печати с увеличенным уровнем отступа.
+     * @brief Creates a new print context with increased indentation level.
      * 
-     * Этот метод создает копию текущего контекста с увеличением уровня отступа на
-     * значение `indent_step`, что позволяет использовать его для печати вложенных структур
-     * с соответствующими отступами.
+     * This method creates a copy of the current context with the indent level increased by
+     * `indent_step`, enabling printing of nested structures with appropriate indentation.
      * 
-     * @return Новый контекст печати с увеличенным уровнем отступа.
+     * @return New print context with increased indentation level.
      */
     PrintContext Indented() const;
 };
 
 /**
  * @class ParsingError
- * @brief Исключение, возникающее при ошибке парсинга JSON.
+ * @brief Exception thrown on JSON parsing errors.
  */
 class ParsingError : public std::runtime_error {
 public:
-    using runtime_error::runtime_error; ///< Использует конструктор базового класса.
+    using runtime_error::runtime_error; ///< Inherit constructors from std::runtime_error.
 };
 
 /**
  * @class Node
- * @brief Универсальный контейнер для представления JSON-значений.
+ * @brief Universal container representing JSON values.
  *
- * Поддерживает типы: null, массив, объект, строка, логическое значение, 
- * целые и дробные числа.
+ * Supports types: null, array, object, string, boolean,
+ * integer and floating point numbers.
  */
 class Node final : public std::variant<std::nullptr_t, Array, Dict, std::string, bool, int, double> {
 public:
@@ -77,53 +73,53 @@ public:
     using Value::variant;
 
     /**
-     * @brief Конструктор узла JSON.
-     * @param value Значение JSON-узла.
+     * @brief Constructs a JSON node.
+     * @param value JSON node value.
      */
     Node(Value value);
 
-    /// @name Методы проверки типа
+    /// @name Type-checking methods
     /// @{
-    bool IsInt() const; ///< Проверяет, хранится ли в узле целое число.
-    bool IsPureDouble() const; ///< Проверяет, является ли число только double (не int).
-    bool IsDouble() const; ///< Проверяет, является ли число double (включая int).
-    bool IsBool() const; ///< Проверяет, является ли значение логическим.
-    bool IsNull() const; ///< Проверяет, является ли значение null.
-    bool IsArray() const; ///< Проверяет, является ли значение массивом.
-    bool IsString() const; ///< Проверяет, является ли значение строкой.
-    bool IsMap() const; ///< Проверяет, является ли значение объектом.
+    bool IsInt() const;       ///< Checks if the node contains an integer.
+    bool IsPureDouble() const;///< Checks if the node contains only a double (not int).
+    bool IsDouble() const;    ///< Checks if the node contains a double (including int).
+    bool IsBool() const;      ///< Checks if the value is boolean.
+    bool IsNull() const;      ///< Checks if the value is null.
+    bool IsArray() const;     ///< Checks if the value is an array.
+    bool IsString() const;    ///< Checks if the value is a string.
+    bool IsMap() const;       ///< Checks if the value is an object.
     /// @}
 
-    /// @name Методы получения значения
+    /// @name Value access methods
     /// @{
-    int AsInt() const; ///< Возвращает значение как int.
-    double AsDouble() const; ///< Возвращает значение как double.
-    bool AsBool() const; ///< Возвращает значение как bool.
-    const Array& AsArray() const; ///< Возвращает значение как массив.
-    const std::string& AsString() const; ///< Возвращает значение как строку.
-    const Dict& AsMap() const; ///< Возвращает значение как объект.
+    int AsInt() const;              ///< Returns the value as int.
+    double AsDouble() const;        ///< Returns the value as double.
+    bool AsBool() const;            ///< Returns the value as bool.
+    const Array& AsArray() const;   ///< Returns the value as array.
+    const std::string& AsString() const; ///< Returns the value as string.
+    const Dict& AsMap() const;      ///< Returns the value as object.
     /// @}
 
     /**
-     * @brief Оператор сравнения.
-     * @param rhs Другой узел JSON.
-     * @return true, если узлы равны.
+     * @brief Equality comparison operator.
+     * @param rhs Another JSON node.
+     * @return true if nodes are equal.
      */
     bool operator==(const Node& rhs) const;
 
     /**
-     * @brief Доступ к значению узла.
-     * @return Ссылка на значение узла.
+     * @brief Access to the node's value.
+     * @return Reference to the node's value.
      */
     Value& GetValue();
     const Value& GetValue() const;
 };
 
 /**
- * @brief Оператор неравенства для Node.
- * @param lhs Левый операнд.
- * @param rhs Правый операнд.
- * @return true, если узлы не равны.
+ * @brief Inequality operator for Node.
+ * @param lhs Left operand.
+ * @param rhs Right operand.
+ * @return true if nodes are not equal.
  */
 inline bool operator!=(const Node& lhs, const Node& rhs) {
     return !(lhs == rhs);
@@ -131,57 +127,57 @@ inline bool operator!=(const Node& lhs, const Node& rhs) {
 
 /**
  * @class Document
- * @brief Представляет JSON-документ, содержащий корневой узел.
+ * @brief Represents a JSON document containing a root node.
  */
 class Document {
 public:
     /**
-     * @brief Конструктор документа.
-     * @param root Корневой узел документа.
+     * @brief Constructs a document.
+     * @param root Root node of the document.
      */
     explicit Document(Node root);
 
     /**
-     * @brief Получает корневой узел документа.
-     * @return Ссылка на корневой узел.
+     * @brief Gets the root node of the document.
+     * @return Reference to the root node.
      */
     const Node& GetRoot() const;
 
 private:
-    Node root_; ///< Корневой узел документа.
+    Node root_; ///< Root node of the document.
 };
 
 /**
- * @brief Оператор сравнения JSON-документов.
- * @param lhs Левый документ.
- * @param rhs Правый документ.
- * @return true, если документы равны.
+ * @brief Equality operator for JSON documents.
+ * @param lhs Left document.
+ * @param rhs Right document.
+ * @return true if documents are equal.
  */
 inline bool operator==(const Document& lhs, const Document& rhs) {
     return lhs.GetRoot() == rhs.GetRoot();
 }
 
 /**
- * @brief Оператор неравенства JSON-документов.
- * @param lhs Левый документ.
- * @param rhs Правый документ.
- * @return true, если документы не равны.
+ * @brief Inequality operator for JSON documents.
+ * @param lhs Left document.
+ * @param rhs Right document.
+ * @return true if documents are not equal.
  */
 inline bool operator!=(const Document& lhs, const Document& rhs) {
     return !(lhs == rhs);
 }
 
 /**
- * @brief Загружает JSON-документ из входного потока.
- * @param input Входной поток.
- * @return JSON-документ.
+ * @brief Loads a JSON document from an input stream.
+ * @param input Input stream.
+ * @return JSON document.
  */
 Document Load(std::istream& input);
 
 /**
- * @brief Выводит JSON-документ в поток.
- * @param doc JSON-документ.
- * @param output Выходной поток.
+ * @brief Prints a JSON document to an output stream.
+ * @param doc JSON document.
+ * @param output Output stream.
  */
 void Print(const Document& doc, std::ostream& output);
 

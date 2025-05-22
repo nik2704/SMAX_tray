@@ -2,6 +2,8 @@
 #include <set>
 #include <stdexcept>
 
+namespace smax {
+
 ConfigManager::ConfigManager(const std::string& path, DecryptFunc decryptFunc, Utf8Func utf8Func)
     : iniFile_(path), decryptFunc_(std::move(decryptFunc)), utf8Func_(std::move(utf8Func)) {
     readConfig();
@@ -92,3 +94,5 @@ int ConfigManager::getPeriod() const {
     std::lock_guard<std::mutex> lock(mtx_);
     return period_;
 }
+
+} // namespace smax

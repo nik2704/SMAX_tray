@@ -1,6 +1,6 @@
 /**
  * @file JSONHelper.h
- * @brief Класс-помощник для обработки JSON и CSV файлов.
+ * @brief Helper class for handling JSON and CSV files.
  */
 
 #pragma once
@@ -12,50 +12,51 @@
 
 /**
  * @enum OutputDestination
- * @brief Перечисление возможных вариантов вывода данных.
+ * @brief Enumeration of possible output destinations.
  */
 enum class OutputDestination {
-    Console,         ///< Вывод в консоль
-    File,            ///< Вывод в файл
-    Both             ///< Вывод и в консоль, и в файл
+    Console,         ///< Output to console
+    File,            ///< Output to file
+    Both             ///< Output to both console and file
 };
 
 /**
  * @class JSONHelper
- * @brief Класс, предоставляющий утилиты для обработки и конвертации JSON и CSV файлов.
+ * @brief Class providing utilities for processing and converting JSON and CSV files.
  *
- * Включает методы для валидации JSON, конвертации между CSV и JSON, а также для вывода данных в консоль и файлы.
+ * Includes methods for validating JSON, converting between CSV and JSON,
+ * as well as outputting data to console and files.
  */
 class JSONHelper {
 public:
     /**
-     * @brief Проверяет, является ли файл валидным JSON.
-     * @param filename Путь к файлу.
-     * @return Возвращает true, если файл является валидным JSON, иначе false.
+     * @brief Checks whether a file contains valid JSON.
+     * @param filename Path to the file.
+     * @return Returns true if the file contains valid JSON, otherwise false.
      */
     static bool IsValidJSON(const std::string& filename);
 
     /**
-     * @brief Конвертирует строковые данные JSON файл в другой JSON файл.
-     * @param inputFile Путь к исходному JSON файлу.
-     * @param outputFile Путь к выходному JSON файлу.
-     * @return Возвращает true, если конвертация прошла успешно, иначе false.
+     * @brief Converts JSON string data from one file to another JSON file.
+     * @param inputFile Path to the source JSON file.
+     * @param outputFile Path to the output JSON file.
+     * @return Returns true if conversion succeeded, otherwise false.
      */
     static bool ConvertJSON(const std::string& inputFile, const std::string& outputFile);
 
     /**
-     * @brief Выводит содержимое JSON файла в консоль.
-     * @param filename Путь к JSON файлу.
-     * @return Возвращает true, если файл был успешно прочитан и выведен, иначе false.
+     * @brief Prints the contents of a JSON file to the console.
+     * @param filename Path to the JSON file.
+     * @return Returns true if the file was successfully read and printed, otherwise false.
      */
     static bool PrintJSONfromFile(const std::string& filename);
 
     /**
-     * @brief Конвертирует CSV файл в JSON.
-     * @param csvFile Путь к CSV файлу.
-     * @param outputDestination Вывод данных (по умолчанию - консоль).
-     * @param outputJsonFile Путь к файлу для записи JSON (по умолчанию - пустая строка, значит не сохраняется в файл).
-     * @return Возвращает указатель на JSON документ.
+     * @brief Converts a CSV file to JSON.
+     * @param csvFile Path to the CSV file.
+     * @param outputDestination Output destination (default is console).
+     * @param outputJsonFile Path to the file to save JSON output (default is empty, meaning no file saving).
+     * @return Returns a pointer to the JSON document.
      */
     static std::shared_ptr<json::Document> ConvertCSVToJSON(
         const std::string& csvFile,
@@ -64,54 +65,54 @@ public:
     );
 
     /**
-     * @brief Преобразует JSON-строку в JSON-документ.
-     * @param jsonString Строка, содержащая JSON.
-     * @return Указатель на JSON-документ, если разбор успешен, иначе nullptr.
+     * @brief Parses a JSON string into a JSON document.
+     * @param jsonString String containing JSON.
+     * @return Pointer to the JSON document if parsing succeeds, otherwise nullptr.
      */
     static std::shared_ptr<json::Document> ParseJSONFromString(const std::string& jsonString);
 
 private:
     /**
-     * @brief Разделяет строку CSV на отдельные элементы.
-     * @param line Строка CSV.
-     * @return Вектор строк, представляющих отдельные элементы.
+     * @brief Splits a CSV line into individual elements.
+     * @param line CSV line.
+     * @return Vector of strings representing individual elements.
      */
     static std::vector<std::string> SplitCSV(const std::string& line);
 
     /**
-     * @brief Преобразует CSV файл в JSON.
-     * @param csvFile Путь к CSV файлу.
-     * @return Указатель на созданный JSON документ.
+     * @brief Converts a CSV file into JSON.
+     * @param csvFile Path to the CSV file.
+     * @return Pointer to the created JSON document.
      */
     static std::shared_ptr<json::Document> CreateJsonFromCSV(const std::string& csvFile);
 
     /**
-     * @brief Читает заголовки из CSV файла.
-     * @param input Поток ввода.
-     * @return Вектор строк, представляющих заголовки.
+     * @brief Reads headers from a CSV file.
+     * @param input Input stream.
+     * @return Vector of strings representing the headers.
      */
     static std::shared_ptr<std::vector<std::string>> ReadCSVHeaders(std::ifstream& input);
 
     /**
-     * @brief Создает JSON на основе данных CSV.
-     * @param input Поток ввода.
-     * @param headers Вектор заголовков CSV.
-     * @return Указатель на созданный JSON документ.
+     * @brief Creates JSON based on CSV data rows.
+     * @param input Input stream.
+     * @param headers Vector of CSV headers.
+     * @return Pointer to the created JSON document.
      */
     static std::shared_ptr<json::Document> CreateJsonFromRows(std::ifstream& input, const std::shared_ptr<std::vector<std::string>>& headers);
 
     /**
-     * @brief Печатает JSON документ в консоль или в файл.
-     * @param doc Указатель на JSON документ.
-     * @param outputDestination Место вывода (консоль, файл или оба).
-     * @param jsonFile Путь к файлу для записи JSON.
+     * @brief Prints a JSON document to console or file.
+     * @param doc Pointer to the JSON document.
+     * @param outputDestination Output destination (console, file, or both).
+     * @param jsonFile Path to the JSON file for output.
      */
     static void PrintJSON(const std::shared_ptr<json::Document>& doc, const OutputDestination & outputDestination, const std::string& jsonFile);
 
     /**
-     * @brief Печатает JSON документ в файл.
-     * @param doc Указатель на JSON документ.
-     * @param jsonFile Путь к файлу для записи JSON.
+     * @brief Prints a JSON document to a file.
+     * @param doc Pointer to the JSON document.
+     * @param jsonFile Path to the JSON file for output.
      */
     static void PrintJSONtoFile(const std::shared_ptr<json::Document>& doc, const std::string& jsonFile);
 };

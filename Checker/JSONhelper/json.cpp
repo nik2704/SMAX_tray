@@ -17,7 +17,7 @@ PrintContext PrintContext::Indented() const {
 namespace {
 using namespace std::literals;
 
-// -------------------------Вспомогательные функции -------------------
+// ------------------------- Supportive functions -------------------
 Node LoadNode(std::istream& input);
 Node LoadString(std::istream& input);
 
