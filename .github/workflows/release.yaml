@@ -3,7 +3,7 @@ name: Windows Build and Package
 on:
   push:
     tags:
-      - 'v*'  # Triggers only on version tags like v1.0.0
+      - 'v*'
 
 jobs:
   build-windows:
@@ -28,16 +28,10 @@ jobs:
       shell: pwsh
       run: |
         $env:VCPKG_ROOT = "${{ github.workspace }}\vcpkg"
-
         if (-not (Test-Path "$env:VCPKG_ROOT\vcpkg.exe")) {
-          Write-Host "Cloning and bootstrapping vcpkg..."
           git clone https://github.com/microsoft/vcpkg.git $env:VCPKG_ROOT
           & "$env:VCPKG_ROOT\bootstrap-vcpkg.bat"
-        } else {
-          Write-Host "vcpkg already present."
         }
-
-        Write-Host "Skipping boost-json installation."
 
     - name: Configure CMake
       shell: pwsh
@@ -52,9 +46,20 @@ jobs:
       run: |
         cmake --build build --config Release
 
-    - name: Upload EXE to GitHub Release
+    - name: Install Project (for CPack)
+      shell: pwsh
+      run: |
+        cmake --install build --prefix build/_install --config Release
+
+    - name: Package with CPack (NSIS)
+      shell: pwsh
+      run: |
+        cd build
+        cpack -G NSIS
+
+    - name: Upload Installer to GitHub Release
       uses: softprops/action-gh-release@v2
       with:
-        files: build/Release/*.exe
+        files: build/*.exe  # This will include the NSIS installer
       env:
         GITHUB_TOKEN: ${{ secrets.MY_TOKEN }}
