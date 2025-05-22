@@ -28,15 +28,16 @@ jobs:
       shell: pwsh
       run: |
         $env:VCPKG_ROOT = "${{ github.workspace }}\vcpkg"
+
         if (-not (Test-Path "$env:VCPKG_ROOT\vcpkg.exe")) {
+          Write-Host "Cloning and bootstrapping vcpkg..."
           git clone https://github.com/microsoft/vcpkg.git $env:VCPKG_ROOT
           & "$env:VCPKG_ROOT\bootstrap-vcpkg.bat"
+        } else {
+          Write-Host "vcpkg already present."
         }
 
-    - name: Ensure NSIS is Installed
-      shell: pwsh
-      run: |
-        choco install nsis -y
+        Write-Host "Skipping boost-json installation."
 
     - name: Configure CMake
       shell: pwsh
@@ -51,27 +52,9 @@ jobs:
       run: |
         cmake --build build --config Release
 
-    - name: Install Project (for CPack)
-      shell: pwsh
-      run: |
-        cmake --install build --prefix build/_install --config Release
-
-    - name: Package with CPack (NSIS)
-      shell: pwsh
-      run: |
-        cd build
-        cpack -G NSIS
-
-    - name: Upload NSISOutput.log on failure
-      if: failure()
-      uses: actions/upload-artifact@v4
-      with:
-        name: NSISOutputLog
-        path: build/_CPack_Packages/win64/NSIS/NSISOutput.log
-
-    - name: Upload Installer to GitHub Release
+    - name: Upload EXE to GitHub Release
       uses: softprops/action-gh-release@v2
       with:
-        files: build/*.exe  # Adjust path if needed (e.g. _CPack_Packages/win64/NSIS/*.exe)
+        files: build/Release/*.exe
       env:
         GITHUB_TOKEN: ${{ secrets.MY_TOKEN }}

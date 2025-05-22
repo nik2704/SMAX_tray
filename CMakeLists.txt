@@ -67,8 +67,6 @@ install(TARGETS smax_tray_client DESTINATION bin)
 include(InstallRequiredSystemLibraries)
 
 set(CPACK_GENERATOR NSIS)
-set(CPACK_NSIS_DISPLAY_NAME "SMAX Tray Client")
-set(CPACK_NSIS_PACKAGE_NAME "SMAX Tray Client")
 set(CPACK_PACKAGE_NAME "SMAX Tray Client")
 set(CPACK_PACKAGE_VENDOR "OT")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "SMAX Tray Utility for Windows")
