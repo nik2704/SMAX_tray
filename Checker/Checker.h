@@ -90,7 +90,7 @@ private:
     /**
      * @brief Dismisses the current alert and resets the notification icon.
      */
-    void Checker::dismissAlert();
+    void dismissAlert();
 
     /**
      * @brief Encodes a string for safe use in a URL.

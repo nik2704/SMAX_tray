@@ -52,7 +52,8 @@ target_include_directories(smax_tray_client PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/Utils
 )
 
-target_link_libraries(smax_tray_client PRIVATE crypt32 Shlwapi.lib)
+# target_link_libraries(smax_tray_client PRIVATE crypt32 Shlwapi.lib)
+target_link_libraries(smax_tray_client PRIVATE crypt32 Shlwapi wininet)
 
 set_target_properties(smax_tray_client PROPERTIES
     CXX_STANDARD 17
