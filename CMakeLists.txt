@@ -32,6 +32,7 @@ add_executable(smax_tray_client WIN32
     Checker/NetworkClient/NetworkClient.cpp
     Checker/ConfigManager/ConfigManager.cpp
     Checker/TrayManager/TrayManager.cpp
+    Checker/Worker/Worker.cpp
     Utils/Utils.cpp
     resources.rc
 )
@@ -47,6 +48,7 @@ target_include_directories(smax_tray_client PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/Checker/ConfigManager
     ${CMAKE_CURRENT_SOURCE_DIR}/Checker/TrayManager
     ${CMAKE_CURRENT_SOURCE_DIR}/TokenInitializer
+    ${CMAKE_CURRENT_SOURCE_DIR}/Worker
     ${CMAKE_CURRENT_SOURCE_DIR}/SimpleIni
     ${CMAKE_CURRENT_SOURCE_DIR}/Utils
 )

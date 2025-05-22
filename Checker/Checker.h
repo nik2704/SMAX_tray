@@ -12,10 +12,8 @@
 
 #include "ConfigManager/ConfigManager.h"
 #include "TrayManager/TrayManager.h"
-#include <thread>
+#include "Worker/Worker.h"
 #include <atomic>
-#include <condition_variable>
-#include <mutex>
 #include <string>
 #include <set>
 #include <vector>
@@ -59,7 +57,7 @@ public:
     /**
      * @brief Gracefully stops the checker and cleans up resources.
      */
-    void shutdown();
+    void stop();
 
 private:
     /// @brief Private constructor for singleton.
@@ -84,15 +82,10 @@ private:
      */
     ConfigManager* getConfig() const;
 
-    /**
-     * @brief Runs the cycle to get information from SMAX.
-     */
-    void runWorker();
-
-    /**
-     * @brief Stops the worker thread and cleans up resources.
-     */
-    void Checker::stop();
+    // /**
+    //  * @brief Runs the cycle to get information from SMAX.
+    //  */
+    // void runWorker();
     
     /**
      * @brief Dismisses the current alert and resets the notification icon.
@@ -134,12 +127,10 @@ private:
     std::wstring iniFile_;                  ///< Path to the INI configuration file.
     std::unique_ptr<TrayManager> tray_;     ///< Tray manager for system tray notifications.
     HINSTANCE hInst_ = nullptr;             ///< Application instance handle.
-    std::thread worker_;                    ///< Background worker thread.
-    std::mutex mutex_;
-    std::condition_variable cv_;
-    std::atomic<bool> running_;             ///< Flag indicating if the checker is running.
+    // std::thread worker_;                    ///< Background worker thread.
+    std::unique_ptr<Worker> worker_;        ///< Background worker for periodic tasks.
     std::set<std::string> processedIDs_;    ///< Set of already processed IDs to avoid duplicates.
-    std::unique_ptr<ConfigManager> config_; ///< Responsible for reading and holding configuration values.
+    std::shared_ptr<ConfigManager> config_; ///< Responsible for reading and holding configuration values.
 };
 
 } // namespace smax

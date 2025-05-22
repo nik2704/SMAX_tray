@@ -8,17 +8,12 @@
 #include <shellapi.h>
 #include <wininet.h>
 #include <sstream>
-#include <thread>
 #include <chrono>
 #include <iostream>
 #include <iomanip>
-#include <Windows.h>
 
 #pragma comment(lib, "wininet.lib")
 
-
-STARTUPINFO si = { sizeof(STARTUPINFO) };
-PROCESS_INFORMATION pi;
 
 namespace smax {
 
@@ -32,10 +27,10 @@ Checker& Checker::getInstance() {
     return instance;
 }
 
-Checker::Checker() : running_(false) {}
+Checker::Checker() {}
 
 Checker::~Checker() {
-    shutdown();
+    stop();
 }
 
 std::string Checker::urlEncode(const std::string& value) {
@@ -54,7 +49,7 @@ std::string Checker::urlEncode(const std::string& value) {
 }
 
 void Checker::start(HINSTANCE hInstance, const std::wstring& iniFile) {
-    if (running_) {
+    if (worker_ || tray_ != nullptr) {
         return;
     }
 
@@ -65,63 +60,27 @@ void Checker::start(HINSTANCE hInstance, const std::wstring& iniFile) {
     tray_ = std::make_unique<smax::TrayManager>();
     tray_->initialize(hInstance);
     tray_->setOnAcknowledge([this]() { this->acknowledge(); });
-    tray_->setOnShutdown([this]() { this->shutdown(); });
+    tray_->setOnShutdown([this]() { this->stop(); });
     tray_->setOnUpdateConfig([this]() { this->updateConfiguration(); });
 
     tray_->setIcon(LoadIcon(hInstance, MAKEINTRESOURCE(SMAX_TRAY_ICON_INIT)));
 
-    running_ = true;
-
-    runWorker();
-}
-
-void Checker::runWorker() {
-    worker_ = std::thread([this]() {
-        std::unique_lock<std::mutex> lock(mutex_);
-        while (running_) {
-            lock.unlock();
-            std::string encoded_filter = urlEncode(config_->getFilter());
-            std::string smax_url = config_->getUrl() + "&filter=" + encoded_filter;
-            sendGET(smax_url);
-            lock.lock();
-
-            cv_.wait_for(lock, std::chrono::seconds(config_->getPeriod()), [this]() { return !running_; });
-        }
-    });
+    worker_ = std::make_unique<Worker>(hInst_, config_, tray_.get());
+    worker_->start();
 }
 
 void Checker::stop() {
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        running_ = false;
-    }
-    cv_.notify_all();
-
-    if (worker_.joinable()) {
-        worker_.join();
+    if (worker_) {
+        worker_->stop();
+        worker_.reset();
     }
 
     if (tray_) {
         tray_->shutdown();
         tray_.reset();
     }
-}
 
-void Checker::shutdown() {
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        running_ = false;
-    }
-    cv_.notify_all();
-
-    if (worker_.joinable()) {
-        worker_.join();
-    }
-
-    if (tray_) {
-        tray_->shutdown();
-        tray_.reset();
-    }
+    PostQuitMessage(0);
 }
 
 void Checker::dismissAlert() {
@@ -186,7 +145,7 @@ LRESULT CALLBACK Checker::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 void Checker::readConfig() {
     std::string iniPath = wideToUtf8(iniFile_.c_str());
 
-    config_ = std::make_unique<ConfigManager>(
+    config_ = std::make_shared<ConfigManager>(
         iniPath, 
         [](const std::wstring& wstr) -> std::string {
             return getDecryptedString(wstr.c_str());
@@ -237,6 +196,8 @@ void Checker::sendGET(const std::string& url) {
         if (newElements > 0) {
             tray_->showInfo(L"New " + std::to_wstring(newElements) + L" requests found!");
             tray_->setIcon(LoadIcon(hInst_, MAKEINTRESOURCE(SMAX_TRAY_ICON_ALERT)));
+        } else {
+            tray_->setIcon(LoadIcon(hInst_, MAKEINTRESOURCE(SMAX_TRAY_ICON_INIT)));
         }
     } else {
         tray_->showInfo(L"Failed to fetch data from SMAX", L"Error");
