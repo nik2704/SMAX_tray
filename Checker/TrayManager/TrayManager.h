@@ -44,6 +44,13 @@ public:
     void showInfo(const std::wstring& message, const std::wstring& title = L"Notification");
 
     /**
+     * @brief Displays an Error balloon notification.
+     * @param message The message text to display.
+     * @param title The title of the notification balloon (default: "Notification").
+     */
+    void showErrorMessage(const std::wstring& title, const std::wstring& message);
+    
+    /**
      * @brief Sets the icon used for the tray.
      * @param hIcon Handle to the icon to display in the tray.
      */
@@ -100,7 +107,7 @@ private:
      * @brief Removes the tray icon from the system.
      */
     void destroyTrayIcon();
-
+    
     /**
      * @brief Window procedure for processing tray-related messages.
      * @param hwnd Handle to the window.

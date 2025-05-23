@@ -33,7 +33,7 @@ public:
      * @param decryptFunc Function to decrypt wide strings.
      * @param utf8Func Function to convert wide strings to UTF-8 strings.
      */
-    ConfigManager(const std::string& path, DecryptFunc decryptFunc, Utf8Func utf8Func);
+    ConfigManager(const std::string& path, DecryptFunc decryptFunc, Utf8Func utf8Func, std::string errorMsg);
 
     /**
      * @brief Retrieves a value from the configuration by section and key.
@@ -89,8 +89,16 @@ public:
 
     /**
      * @brief Reads and parses the configuration from the INI file.
+     * @param errorMsg Error message.
+     * @return true if it was sucessful.
      */
-    void readConfig();
+    bool readConfig(std::string& errorMsg);
+
+    /**
+     * @brief Result of load CFG.
+     * @return true if cfg is loaded.
+     */
+    bool hasConfig() const;
 
     // Disable copy construction and assignment
     ConfigManager(const ConfigManager&) = delete;
@@ -106,6 +114,7 @@ private:
     std::string token_;            ///< API token for authorization.
     std::string filter_;           ///< Optional filter string for requests.
     int period_ = 60;              ///< Period in seconds between each request.
+    bool has_cfg_ = false;         ///< Flag indicating if the configuration was successfully loaded.;
 
     mutable std::mutex mtx_;       ///< Mutex for thread-safe access.
 };

@@ -154,6 +154,7 @@ LRESULT CALLBACK Checker::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 
 void Checker::readConfig() {
     std::string iniPath = wideToUtf8(iniFile_.c_str());
+    std::string errorMsg;
 
     if (!config_) {
         config_ = std::make_shared<ConfigManager>(
@@ -163,10 +164,16 @@ void Checker::readConfig() {
             },
             [this](const std::wstring& wstr) -> std::string {
                 return wideToUtf8(wstr.c_str());
-            }
+            },
+            errorMsg
         );
     } else {
-        config_->readConfig();
+        config_->readConfig(errorMsg);
+    }
+    
+    if (!config_->hasConfig()) {
+        tray_->showErrorMessage(L"Error", utf8ToWide(errorMsg));
+        tray_->setIcon(LoadIcon(hInst_, MAKEINTRESOURCE(SMAX_TRAY_ICON_ERROR)));
     }
 }
 

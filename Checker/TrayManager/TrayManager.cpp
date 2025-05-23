@@ -69,6 +69,17 @@ void TrayManager::showInfo(const std::wstring& message, const std::wstring& titl
     Shell_NotifyIcon(NIM_MODIFY, &nid_);
 }
 
+void TrayManager::showErrorMessage(const std::wstring& title, const std::wstring& message) {
+    NOTIFYICONDATA nid = {};
+    nid.cbSize = sizeof(NOTIFYICONDATA);
+    nid.hWnd = hwnd_;
+    nid.uFlags = NIF_INFO;
+    wcsncpy_s(nid.szInfo, message.c_str(), _TRUNCATE);
+    wcsncpy_s(nid.szInfoTitle, title.c_str(), _TRUNCATE);
+    nid.dwInfoFlags = NIIF_ERROR;
+    Shell_NotifyIcon(NIM_MODIFY, &nid);
+}
+
 void TrayManager::dismissAlert() {
     wcscpy_s(nid_.szInfo, L"");
     wcscpy_s(nid_.szInfoTitle, L"");

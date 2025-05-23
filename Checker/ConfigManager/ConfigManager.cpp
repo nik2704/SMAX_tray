@@ -4,21 +4,35 @@
 
 namespace smax {
 
-ConfigManager::ConfigManager(const std::string& path, DecryptFunc decryptFunc, Utf8Func utf8Func)
+ConfigManager::ConfigManager(const std::string& path, DecryptFunc decryptFunc, Utf8Func utf8Func, std::string errorMsg)
     : iniFile_(path), decryptFunc_(std::move(decryptFunc)), utf8Func_(std::move(utf8Func)) {
-    readConfig();
+    readConfig(errorMsg);
 }
 
-void ConfigManager::readConfig() {
+bool ConfigManager::hasConfig() const {
+    return has_cfg_;
+}
+
+bool ConfigManager::readConfig(std::string& errorMsg) {
     std::lock_guard<std::mutex> lock(mtx_);
+    has_cfg_ = false;
 
     CSimpleIniW ini;
     ini.SetUnicode();
     if (ini.LoadFile(iniFile_.c_str()) < 0) {
-        throw std::runtime_error("Failed to load INI file: " + iniFile_);
+        errorMsg = "Failed to load INI file: " + iniFile_; 
+
+        return has_cfg_;
     }
 
-    period_ = std::stoi(ini.GetValue(L"Settings", L"period", L"60"));
+    try {
+        period_ = std::stoi(ini.GetValue(L"Settings", L"period", L"60"));
+    } catch (const std::exception& e) {
+        errorMsg = "Invalid period value: " + std::string(e.what());
+
+        return has_cfg_;
+    }
+
     auto instance = ini.GetValue(L"Settings", L"instance", L"");
 
     auto ini_hostname = utf8Func_(ini.GetValue(instance, L"hostname", L""));
@@ -33,6 +47,9 @@ void ConfigManager::readConfig() {
 
     url_ = "https://" + ini_hostname + "/rest/" + ini_tenantId + "/ems/Request?layout=Id";
     portalURL_ = "https://" + ini_hostname + "/saw/Requests?TENANTID=" + ini_tenantId;
+
+    has_cfg_ = true;
+    return has_cfg_;
 }
 
 std::wstring ConfigManager::getValue(const std::string& section, const std::string& key) const {
