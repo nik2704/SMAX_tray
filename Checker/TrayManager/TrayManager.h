@@ -73,6 +73,12 @@ public:
     void setOnUpdateConfig(std::function<void()> callback);
 
     /**
+     * @brief Open URL in a web browser.
+     * @param url The URL.
+     */
+    void openURLinBrowser(const std::wstring& url);
+
+    /**
      * @brief Invokes the acknowledgment callback, if set.
      */
     void acknowledge();

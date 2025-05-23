@@ -33,6 +33,6 @@ wchar_t buffer[256] = {};
     }
 
     // Clean up on exit
-    smax::Checker::getInstance().stop();
+    smax::Checker::getInstance().shutdown();
     return 0;
 }

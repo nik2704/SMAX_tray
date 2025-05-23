@@ -60,13 +60,19 @@ void Checker::start(HINSTANCE hInstance, const std::wstring& iniFile) {
     tray_ = std::make_unique<smax::TrayManager>();
     tray_->initialize(hInstance);
     tray_->setOnAcknowledge([this]() { this->acknowledge(); });
-    tray_->setOnShutdown([this]() { this->stop(); });
+    tray_->setOnShutdown([this]() { this->shutdown(); });
     tray_->setOnUpdateConfig([this]() { this->updateConfiguration(); });
 
     tray_->setIcon(LoadIcon(hInstance, MAKEINTRESOURCE(SMAX_TRAY_ICON_INIT)));
 
     worker_ = std::make_unique<Worker>(hInst_, config_, tray_.get());
     worker_->start();
+}
+
+void Checker::shutdown() {
+    stop();
+
+    PostQuitMessage(0);
 }
 
 void Checker::stop() {
@@ -79,8 +85,6 @@ void Checker::stop() {
         tray_->shutdown();
         tray_.reset();
     }
-
-    PostQuitMessage(0);
 }
 
 void Checker::dismissAlert() {
@@ -88,7 +92,13 @@ void Checker::dismissAlert() {
 }
 
 void Checker::acknowledge() {
-    tray_->acknowledge();
+    dismissAlert();
+    tray_->setIcon(LoadIcon(hInst_, MAKEINTRESOURCE(SMAX_TRAY_ICON_INIT)));
+
+    const auto& portalURL = Checker::getInstance().getConfig()->getPortalURL();
+    auto wURL = std::wstring(portalURL.begin(), portalURL.end());
+
+    tray_->openURLinBrowser(wURL);
 }
 
 void Checker::updateConfiguration() {

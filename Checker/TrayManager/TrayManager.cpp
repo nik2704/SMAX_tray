@@ -88,6 +88,10 @@ void TrayManager::setOnUpdateConfig(std::function<void()> callback) {
     onUpdateConfig_ = std::move(callback);
 }
 
+void TrayManager::openURLinBrowser(const std::wstring& url) {
+    ShellExecute(nullptr, L"open", url.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
+}
+
 LRESULT CALLBACK TrayManager::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     if (uMsg == WM_USER + 1) {
         if (lParam == WM_RBUTTONUP) {

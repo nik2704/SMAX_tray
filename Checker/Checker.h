@@ -55,22 +55,23 @@ public:
     void start(HINSTANCE hInstance, const std::wstring& iniFile);
 
     /**
-     * @brief Gracefully stops the checker and cleans up resources.
+     * @brief Gracefully shutdown the application.
      */
-    void stop();
+    void shutdown();
 
 private:
-    /// @brief Private constructor for singleton.
-    Checker();
+    Checker();  /// @brief Private constructor for singleton.
 
-    /// @brief Destructor.
-    ~Checker();
+    ~Checker(); /// @brief Destructor.
 
-    /// @brief Deleted copy constructor.
-    Checker(const Checker&) = delete;
+    Checker(const Checker&) = delete;   /// @brief Deleted copy constructor.
+    
+    Checker& operator=(const Checker&) = delete;    /// @brief Deleted assignment operator.
 
-    /// @brief Deleted assignment operator.
-    Checker& operator=(const Checker&) = delete;
+    /**
+     * @brief Gracefully stop the checker and cleans up resources.
+     */
+    void stop();
 
     /**
      * @brief Reads configuration parameters from the INI file.
@@ -81,11 +82,6 @@ private:
      * @brief Get configuration parameters from the INI file.
      */
     ConfigManager* getConfig() const;
-
-    // /**
-    //  * @brief Runs the cycle to get information from SMAX.
-    //  */
-    // void runWorker();
     
     /**
      * @brief Dismisses the current alert and resets the notification icon.
