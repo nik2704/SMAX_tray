@@ -2,8 +2,11 @@
 
 #include "../ConfigManager/ConfigManager.h"
 #include "../TrayManager/TrayManager.h"
+#include <atomic>
+#include <condition_variable>
 #include <set>
 #include <string>
+#include <thread>
 #include <memory>
 
 namespace smax {
