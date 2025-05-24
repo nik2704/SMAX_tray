@@ -2,7 +2,6 @@
 
 #include <functional>
 #include <string>
-// #include <vector>
 #include <mutex>
 #include "SimpleIni.h"
 
@@ -20,6 +19,11 @@ public:
      * @brief Function type alias for decrypting wide string inputs to UTF-8 strings.
      */
     using DecryptFunc = std::function<std::string(const std::wstring&)>;
+
+    /**
+     * @brief Function type alias for encrypting wide string inputs.
+     */
+    using EncryptFunc = std::function<std::wstring(std::wstring&&)>;
 
     /**
      * @brief Function type alias for converting wide strings to UTF-8 strings.
@@ -115,6 +119,7 @@ private:
     std::string filter_;           ///< Optional filter string for requests.
     int period_ = 60;              ///< Period in seconds between each request.
     bool has_cfg_ = false;         ///< Flag indicating if the configuration was successfully loaded.;
+
 
     mutable std::mutex mtx_;       ///< Mutex for thread-safe access.
 };

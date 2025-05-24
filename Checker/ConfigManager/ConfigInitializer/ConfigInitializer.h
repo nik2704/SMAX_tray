@@ -1,7 +1,8 @@
 #pragma once
 
-#include <windows.h>
+#include <functional>
 #include <string>
+#include <windows.h>
 #include "../SimpleIni.h"
 
 namespace smax {
@@ -35,33 +36,56 @@ struct InputData {
 class ConfigInitializer {
 public:
     /**
+     * @brief Function type alias for decrypting wide string inputs to UTF-8 strings.
+     */
+    using DecryptFunc = std::function<std::string(const std::wstring&)>;
+
+    /**
+     * @brief Function type alias for encrypting wide string inputs.
+     */
+    using EncryptFunc = std::function<std::wstring(std::wstring&&)>;
+
+    /**
+     * @brief Function type alias for converting wide strings to UTF-8 strings.
+     */
+    using WideToUtf8Func = std::function<std::string(const std::wstring&)>;
+
+    /**
+     * @brief Function type alias for converting UTF-8 strings to wide strings.
+     */
+    using Utf8ToWideFunc = std::function<std::wstring(const std::string&)>;
+
+    /**
      * @brief Initializes a user token if not already set in the INI configuration (if token=-init-).
-     *
+     * @param encryptFunc Function to encrypt wide strings.
+     * @param wideToUtf8Func Function to convert wide strings to UTF-8 strings.
      * @param iniPath Full path to the INI file used for configuration.
      */
-    static void initializeToken(const std::wstring& iniPath);
+    static void initializeToken(const std::wstring& iniPath, EncryptFunc encryptFunc, WideToUtf8Func wideToUtf8Func);
 
     /**
      * @brief Updates information in the INI file.
-     *
+     * @param decryptFunc Function to decrypt wide strings.
+     * @param encryptFunc Function to encrypt wide strings.
+     * @param utf8ToWideFunc Function to convert UTF-8 strings to wide strings.
      * @param iniPath Full path to the INI file used for configuration.
      */
-    static void UpdateINI(const std::wstring& iniPath);
+    static void UpdateINI(const std::wstring& iniPath, DecryptFunc decryptFunc, EncryptFunc encryptFunc, Utf8ToWideFunc utf8ToWideFunc);
 
 private:
     /**
      * @brief Runs a dialog to create the INI file.
-     *
      * @param iniPath Full path to the INI file used for configuration.
+     * @param encryptFunc Function to encrypt wide strings.
      */
-    static bool generateINI(const std::wstring& iniPath);
+    static bool generateINI(const std::wstring& iniPath, EncryptFunc encryptFunc);
 
     /**
      * @brief Processes the INI file to extract and update user credentials.
-     *
      * @param iniPath Full path to the INI file used for configuration.
+     * @param encryptFunc Function to encrypt wide strings.
      */    
-    static void processINI(const std::wstring& iniPath);
+    static void processINI(const std::wstring& iniPath, EncryptFunc encryptFunc);
 
     /**
      * @brief Prompts the user for both username and token using a modal dialog.

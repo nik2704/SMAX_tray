@@ -27,6 +27,9 @@ wchar_t buffer[256] = {};
             [](const std::wstring& wstr) -> std::string {
                 return getDecryptedString(wstr.c_str());
             },
+            [](std::wstring&& wstr) -> std::wstring {
+                return getEncryptedString(std::move(wstr));
+            },
             [](const std::wstring& wstr) -> std::string {
                 return wideToUtf8(wstr.c_str());
             },

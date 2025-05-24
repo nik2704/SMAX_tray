@@ -28,10 +28,18 @@ public:
     using DecryptFunc = std::function<std::string(const std::wstring&)>;
 
     /**
+     * @brief Function type alias for encrypting wide string inputs.
+     */
+    using EncryptFunc = std::function<std::wstring(std::wstring&&)>;
+
+    /**
      * @brief Function type alias for converting wide strings to UTF-8 strings.
      */
     using WideToUtf8Func    = std::function<std::string(const std::wstring&)>;
 
+    /**
+     * @brief Function type alias for converting UTF-8 strings to wide strings.
+     */
     using Utf8ToWideFunc = std::function<std::wstring(const std::string&)>;
 
     /**
@@ -40,7 +48,7 @@ public:
      * @param utf8Func Function to convert wide strings to UTF-8 strings.
      * @return Reference to the Checker instance.
      */
-    static Checker& getInstance(DecryptFunc decryptFunc, WideToUtf8Func wideToUtf8Func, Utf8ToWideFunc utf8ToWideFunc);
+    static Checker& getInstance(DecryptFunc decryptFunc, EncryptFunc encryptFunc, WideToUtf8Func wideToUtf8Func, Utf8ToWideFunc utf8ToWideFunc);
 
     /**
      * @brief Gets the instance that was inialized by the getInstance(DecryptFunc decryptFunc, Utf8Func utf8Func).
@@ -118,7 +126,8 @@ private:
     std::shared_ptr<ConfigManager> config_; ///< Responsible for reading and holding configuration values.
     DecryptFunc decryptFunc_ = nullptr;     ///< Function to decrypt wide strings.
     WideToUtf8Func wideToUtf8Func_ = nullptr;           ///< Function to convert wide strings to UTF-8.    
-    Utf8ToWideFunc utf8ToWideFunc_ = nullptr;           ///< Function to convert UTF-8 strings to wide.    
+    Utf8ToWideFunc utf8ToWideFunc_ = nullptr;           ///< Function to convert UTF-8 strings to wide.
+    EncryptFunc encryptFunc_ = nullptr;     ///< Function to encrypt wide strings.
 };
 
 } // namespace smax

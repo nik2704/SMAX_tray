@@ -12,19 +12,20 @@
 namespace smax {
 
 Checker& Checker::getInstanceCreated() {
-    return getInstance(nullptr, nullptr, nullptr);
+    return getInstance(nullptr, nullptr, nullptr, nullptr);
 }
 
-Checker& Checker::getInstance(DecryptFunc decryptFunc, WideToUtf8Func wideToUtf8Func,  Utf8ToWideFunc utf8ToWideFunc) {
+Checker& Checker::getInstance(DecryptFunc decryptFunc, EncryptFunc encryptFunc, WideToUtf8Func wideToUtf8Func,  Utf8ToWideFunc utf8ToWideFunc) {
     static std::once_flag initFlag;
     static Checker* instance = nullptr;
 
     std::call_once(initFlag, [&]() {
-        ConfigInitializer::initializeToken(L"config.ini");
+        ConfigInitializer::initializeToken(L"config.ini", encryptFunc, wideToUtf8Func);
         instance = new Checker();
         instance->decryptFunc_ = decryptFunc;
         instance->wideToUtf8Func_ = wideToUtf8Func;
         instance->utf8ToWideFunc_ = utf8ToWideFunc;
+        instance->encryptFunc_ = encryptFunc;
     });
 
     return *instance;
@@ -114,7 +115,7 @@ void Checker::acknowledge() {
 void Checker::updateConfiguration() {
     dismissAlert();
 
-    ConfigInitializer::UpdateINI(L"config.ini");
+    ConfigInitializer::UpdateINI(L"config.ini", decryptFunc_, encryptFunc_, utf8ToWideFunc_);
     readConfig();
 }
 

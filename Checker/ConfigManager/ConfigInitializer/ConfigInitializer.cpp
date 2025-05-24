@@ -1,5 +1,4 @@
 #include "ConfigInitializer.h"
-#include "..\Utils\Utils.h"
 #include <Shlwapi.h>
 #include <windowsx.h>
 
@@ -59,18 +58,18 @@ INT_PTR CALLBACK FullInputDlgProc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM 
     return FALSE;
 }
 
-void ConfigInitializer::initializeToken(const std::wstring& iniPath) {
+void ConfigInitializer::initializeToken(const std::wstring& iniPath, EncryptFunc encryptFunc, WideToUtf8Func wideToUtf8Func) {
     if (!PathFileExistsW(iniPath.c_str())) {
-        if (!generateINI(iniPath)) {
+        if (!generateINI(iniPath, encryptFunc)) {
             MessageBoxW(NULL, L"Configuration was not created.", L"Warning", MB_ICONWARNING);
         }
         return;
     }
 
-    processINI(iniPath);
+    processINI(iniPath, encryptFunc);
 }
 
-bool ConfigInitializer::generateINI(const std::wstring& iniPath) {
+bool ConfigInitializer::generateINI(const std::wstring& iniPath, EncryptFunc encryptFunc) {
     HINSTANCE hInstance = GetModuleHandleW(NULL);
     InputFullData data = {};
     wcscpy_s(data.period, L"60");
@@ -86,22 +85,21 @@ bool ConfigInitializer::generateINI(const std::wstring& iniPath) {
 
     ini.SetValue(data.tenant, L"hostname", data.hostname);
     ini.SetValue(data.tenant, L"tenantId", data.tenant);
-    ini.SetValue(data.tenant, L"userName", getEncryptedString(data.username).c_str());
-    ini.SetValue(data.tenant, L"token", getEncryptedString(data.token).c_str());
+    ini.SetValue(data.tenant, L"userName", encryptFunc(data.username).c_str());
+    ini.SetValue(data.tenant, L"token", encryptFunc(data.token).c_str());
 
     return ini.SaveFile(iniPath.c_str()) >= 0;
 }
 
-void ConfigInitializer::UpdateINI(const std::wstring& iniPath) {
+void ConfigInitializer::UpdateINI(const std::wstring& iniPath, DecryptFunc decryptFunc, EncryptFunc encryptFunc, Utf8ToWideFunc utf8ToWideFunc) {
     HINSTANCE hInstance = GetModuleHandleW(NULL);
     CSimpleIniW ini;
     ini.SetUnicode();
 
     InputFullData data = {};
 
-    // If the file doesn't exist, fall back to generateINI
     if (!PathFileExistsW(iniPath.c_str())) {
-        generateINI(iniPath);
+        generateINI(iniPath, encryptFunc);
         return;
     }
 
@@ -117,11 +115,12 @@ void ConfigInitializer::UpdateINI(const std::wstring& iniPath) {
     const wchar_t* userName = ini.GetValue(tenant, L"userName", L"");
     const wchar_t* token = ini.GetValue(tenant, L"token", L"");
 
-    // Decrypt values if needed
-    std::wstring decryptedUser = utf8ToWide(getDecryptedString(userName));
-    std::wstring decryptedToken = utf8ToWide(getDecryptedString(token));
+    std::wstring userName_encrypted_wstr(userName);
+    std::wstring token_encrypted_wstr(token);
+  
+    std::wstring decryptedUser = utf8ToWideFunc(decryptFunc(userName));
+    std::wstring decryptedToken = utf8ToWideFunc(decryptFunc(token));
 
-    // Pre-fill the dialog buffer
     wcsncpy_s(data.hostname, hostname, _TRUNCATE);
     wcsncpy_s(data.tenant, tenant, _TRUNCATE);
     wcsncpy_s(data.period, period, _TRUNCATE);
@@ -131,14 +130,13 @@ void ConfigInitializer::UpdateINI(const std::wstring& iniPath) {
     INT_PTR result = DialogBoxParamW(hInstance, MAKEINTRESOURCE(102), NULL, FullInputDlgProc, reinterpret_cast<LPARAM>(&data));
     if (result != IDOK) return;
 
-    // Save updated values
     ini.SetValue(L"Settings", L"instance", data.tenant);
     ini.SetValue(L"Settings", L"period", data.period);
 
     ini.SetValue(data.tenant, L"hostname", data.hostname);
     ini.SetValue(data.tenant, L"tenantId", data.tenant);
-    ini.SetValue(data.tenant, L"userName", getEncryptedString(data.username).c_str());
-    ini.SetValue(data.tenant, L"token", getEncryptedString(data.token).c_str());
+    ini.SetValue(data.tenant, L"userName", encryptFunc(data.username).c_str());
+    ini.SetValue(data.tenant, L"token", encryptFunc(data.token).c_str());
 
     if (ini.SaveFile(iniPath.c_str()) < 0) {
         MessageBoxW(NULL, L"Failed to save config file.", L"Error", MB_ICONERROR);
@@ -146,7 +144,7 @@ void ConfigInitializer::UpdateINI(const std::wstring& iniPath) {
 }
 
 
-void ConfigInitializer::processINI(const std::wstring& iniPath) {
+void ConfigInitializer::processINI(const std::wstring& iniPath, EncryptFunc encryptFunc) {
     CSimpleIniW ini;
     ini.SetUnicode();
     if (ini.LoadFile(iniPath.c_str()) < 0) {
@@ -166,10 +164,10 @@ void ConfigInitializer::processINI(const std::wstring& iniPath) {
         return;
     }
 
-    auto valueUserName = getEncryptedString(std::move(user));
+    auto valueUserName = encryptFunc(std::move(user));
     ini.SetValue(instance, L"userName", valueUserName.c_str());
 
-    auto valueToken = getEncryptedString(std::move(token));
+    auto valueToken = encryptFunc(std::move(token));
     ini.SetValue(instance, L"token", valueToken.c_str());
 
     if (ini.SaveFile(iniPath.c_str()) < 0) {
