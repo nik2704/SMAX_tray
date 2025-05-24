@@ -1,6 +1,5 @@
 #include "ConfigManager.h"
-#include <set>
-#include <stdexcept>
+
 
 namespace smax {
 

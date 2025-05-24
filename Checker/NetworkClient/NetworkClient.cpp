@@ -3,8 +3,6 @@
 #include <wininet.h>
 #include <wincrypt.h>
 #include <sstream>
-#include <iostream>
-#include <fstream>
 
 #pragma comment(lib, "wininet.lib")
 

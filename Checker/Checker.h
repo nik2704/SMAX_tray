@@ -3,21 +3,12 @@
 
 #pragma once
 
-#ifndef UNICODE
-#define UNICODE
-#endif
-#ifndef _UNICODE
-#define _UNICODE
-#endif
 
 #include "ConfigManager/ConfigManager.h"
 #include "TrayManager/TrayManager.h"
 #include "Worker/Worker.h"
-#include <atomic>
 #include <string>
-#include <set>
-#include <vector>
-#include <windows.h>
+
 
 namespace smax {
 

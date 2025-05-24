@@ -4,12 +4,7 @@
 #include "../ConfigManager/ConfigInitializer/ConfigInitializer.h"
 #include "NetworkClient/NetworkClient.h"
 #include "../resource.h"
-
-#include <shellapi.h>
-#include <wininet.h>
 #include <sstream>
-#include <chrono>
-#include <iostream>
 #include <iomanip>
 
 #pragma comment(lib, "wininet.lib")

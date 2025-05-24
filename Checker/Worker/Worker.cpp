@@ -1,11 +1,9 @@
 #include "Worker.h"
 #include "../NetworkClient/NetworkClient.h"
-#include "../Utils/Utils.h"
 #include "../resource.h"
 #include <iomanip>
 #include <sstream>
 #include <chrono>
-#include <Windows.h>
 
 namespace smax {
 

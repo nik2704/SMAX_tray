@@ -2,12 +2,7 @@
 
 #include "../ConfigManager/ConfigManager.h"
 #include "../TrayManager/TrayManager.h"
-#include <thread>
-#include <atomic>
-#include <condition_variable>
-#include <mutex>
 #include <set>
-#include <vector>
 #include <string>
 #include <memory>
 
