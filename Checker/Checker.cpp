@@ -1,6 +1,5 @@
 // Checker.cpp
 #include "Checker.h"
-#include "../Utils/Utils.h"
 #include "../ConfigManager/ConfigInitializer/ConfigInitializer.h"
 #include "NetworkClient/NetworkClient.h"
 #include "../resource.h"
@@ -12,14 +11,23 @@
 
 namespace smax {
 
-Checker& Checker::getInstance() {
+Checker& Checker::getInstanceCreated() {
+    return getInstance(nullptr, nullptr, nullptr);
+}
+
+Checker& Checker::getInstance(DecryptFunc decryptFunc, WideToUtf8Func wideToUtf8Func,  Utf8ToWideFunc utf8ToWideFunc) {
     static std::once_flag initFlag;
-    std::call_once(initFlag, []() {
+    static Checker* instance = nullptr;
+
+    std::call_once(initFlag, [&]() {
         ConfigInitializer::initializeToken(L"config.ini");
+        instance = new Checker();
+        instance->decryptFunc_ = decryptFunc;
+        instance->wideToUtf8Func_ = wideToUtf8Func;
+        instance->utf8ToWideFunc_ = utf8ToWideFunc;
     });
 
-    static Checker instance;
-    return instance;
+    return *instance;
 }
 
 Checker::Checker() {}
@@ -90,7 +98,14 @@ void Checker::acknowledge() {
     dismissAlert();
     tray_->setIcon(LoadIcon(hInst_, MAKEINTRESOURCE(SMAX_TRAY_ICON_INIT)));
 
-    const auto& portalURL = Checker::getInstance().getConfig()->getPortalURL();
+    const auto& instance = Checker::getInstanceCreated();
+
+    if (instance.getConfig() == nullptr) {
+        tray_->showErrorMessage(L"Error", L"Configuration not loaded.");
+        return;
+    }
+
+    const auto& portalURL = instance.getConfig()->getPortalURL();
     auto wURL = std::wstring(portalURL.begin(), portalURL.end());
 
     tray_->openURLinBrowser(wURL);
@@ -123,12 +138,16 @@ LRESULT CALLBACK Checker::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
                 if (cmd == 1) {
                     PostMessage(hwnd, WM_CLOSE, 0, 0);
                 } else if (cmd == 2) {
-                    const auto& portalURL = Checker::getInstance().getConfig()->getPortalURL();
+                    smax::Checker& instance = Checker::getInstanceCreated();
+                    
+                    const auto& portalURL = instance.getConfig()->getPortalURL();
                     wURL = std::wstring(portalURL.begin(), portalURL.end());
                     ShellExecute(hwnd, L"open", wURL.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
-                    Checker::getInstance().acknowledge();
+                    instance.acknowledge();
                 } else if (cmd == 3) {
-                    Checker::getInstance().updateConfiguration();
+                    smax::Checker& instance = Checker::getInstanceCreated();
+
+                    instance.updateConfiguration();
                 }
             }
             return 0;
@@ -148,18 +167,14 @@ LRESULT CALLBACK Checker::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 }
 
 void Checker::readConfig() {
-    std::string iniPath = wideToUtf8(iniFile_.c_str());
+    std::string iniPath = wideToUtf8Func_(iniFile_.c_str());
     std::string errorMsg;
 
     if (!config_) {
         config_ = std::make_shared<ConfigManager>(
             iniPath, 
-            [](const std::wstring& wstr) -> std::string {
-                return getDecryptedString(wstr.c_str());
-            },
-            [this](const std::wstring& wstr) -> std::string {
-                return wideToUtf8(wstr.c_str());
-            },
+            decryptFunc_,
+            wideToUtf8Func_,
             errorMsg
         );
     } else {
@@ -167,7 +182,7 @@ void Checker::readConfig() {
     }
     
     if (!config_->hasConfig()) {
-        tray_->showErrorMessage(L"Error", utf8ToWide(errorMsg));
+        tray_->showErrorMessage(L"Error", utf8ToWideFunc_(errorMsg));
         tray_->setIcon(LoadIcon(hInst_, MAKEINTRESOURCE(SMAX_TRAY_ICON_ERROR)));
     }
 }

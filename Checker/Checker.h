@@ -23,10 +23,30 @@ namespace smax {
 class Checker {
 public:
     /**
+     * @brief Function type alias for decrypting wide string inputs to UTF-8 strings.
+     */
+    using DecryptFunc = std::function<std::string(const std::wstring&)>;
+
+    /**
+     * @brief Function type alias for converting wide strings to UTF-8 strings.
+     */
+    using WideToUtf8Func    = std::function<std::string(const std::wstring&)>;
+
+    using Utf8ToWideFunc = std::function<std::wstring(const std::string&)>;
+
+    /**
      * @brief Gets the singleton instance of the Checker class.
+     * @param decryptFunc Function to decrypt wide strings.
+     * @param utf8Func Function to convert wide strings to UTF-8 strings.
      * @return Reference to the Checker instance.
      */
-    static Checker& getInstance();
+    static Checker& getInstance(DecryptFunc decryptFunc, WideToUtf8Func wideToUtf8Func, Utf8ToWideFunc utf8ToWideFunc);
+
+    /**
+     * @brief Gets the instance that was inialized by the getInstance(DecryptFunc decryptFunc, Utf8Func utf8Func).
+     * @return Reference to the Checker instance.
+     */    
+    static Checker& getInstanceCreated();
 
     /**
      * @brief Acknowledges and clears current notifications or events.
@@ -96,6 +116,9 @@ private:
     HINSTANCE hInst_ = nullptr;             ///< Application instance handle.
     std::unique_ptr<Worker> worker_;        ///< Background worker for periodic tasks.
     std::shared_ptr<ConfigManager> config_; ///< Responsible for reading and holding configuration values.
+    DecryptFunc decryptFunc_ = nullptr;     ///< Function to decrypt wide strings.
+    WideToUtf8Func wideToUtf8Func_ = nullptr;           ///< Function to convert wide strings to UTF-8.    
+    Utf8ToWideFunc utf8ToWideFunc_ = nullptr;           ///< Function to convert UTF-8 strings to wide.    
 };
 
 } // namespace smax

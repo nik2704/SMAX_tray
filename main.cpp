@@ -5,6 +5,7 @@
 /// and starts the Windows message loop. On exit, the checker is properly shut down.
 
 #include "Checker/Checker.h"
+#include "Utils/Utils.h"
 
 /**
  * @brief Windows application entry point.
@@ -22,7 +23,19 @@
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
 wchar_t buffer[256] = {};
     // Start the checker with the config file
-    smax::Checker::getInstance().start(hInstance, L"config.ini");
+    smax::Checker& instance = smax::Checker::getInstance(
+            [](const std::wstring& wstr) -> std::string {
+                return getDecryptedString(wstr.c_str());
+            },
+            [](const std::wstring& wstr) -> std::string {
+                return wideToUtf8(wstr.c_str());
+            },
+            [](const std::string& str) -> std::wstring {
+                return utf8ToWide(str);
+            }
+    );
+    
+    instance.start(hInstance, L"config.ini");
 
     MSG msg = {};
 
@@ -33,6 +46,6 @@ wchar_t buffer[256] = {};
     }
 
     // Clean up on exit
-    smax::Checker::getInstance().shutdown();
+    instance.shutdown();
     return 0;
 }
