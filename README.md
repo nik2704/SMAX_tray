@@ -105,7 +105,8 @@ Stoken=-init-
 2. Run the following commands in a terminal:
 
 ```bash
-cmake -S . -B build -G "Visual Studio 17 2022"
+cmake -S . -B build
+cmake --build build
 cmake --build build --config Release
 ```
 
