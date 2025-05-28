@@ -6,10 +6,12 @@ set(PROJECT_VERSION 0.0.${PATCH_VERSION})
 
 project(smax_tray_client VERSION ${PROJECT_VERSION} LANGUAGES CXX)
 
-
 # ✅ Statically link the C++ runtime if using MSVC
 if(MSVC)
     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+else()
+    # ✅ Statically link C++ runtime and threading lib if using MinGW/GCC
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static -static-libgcc -static-libstdc++ -lpthread")
 endif()
 
 
