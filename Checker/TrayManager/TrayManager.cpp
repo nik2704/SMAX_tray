@@ -146,12 +146,12 @@ void TrayManager::updateTooltip(int requests, int tasks, int approvals) {
         }
 
         if (tasks > 0) {
-            if (!tooltip.empty()) tooltip += L" • ";
+            if (!tooltip.empty()) tooltip += L" + ";
             tooltip += std::to_wstring(tasks) + L" new task(s)";
         }
 
         if (approvals > 0) {
-            if (!tooltip.empty()) tooltip += L" • ";
+            if (!tooltip.empty()) tooltip += L" + ";
             tooltip += std::to_wstring(approvals) + L" new approval(s)";
         }
     }
