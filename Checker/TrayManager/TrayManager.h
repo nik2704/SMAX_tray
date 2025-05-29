@@ -65,7 +65,10 @@ public:
      * @brief Registers a callback to be called when the user acknowledges a notification.
      * @param callback The function to call on acknowledge.
      */
-    void setOnAcknowledge(std::function<void()> callback);
+    void setOnAcknowledgeInbox(std::function<void()> callback);
+    void setOnAcknowledgeRequests(std::function<void()> callback);
+    void setOnAcknowledgeTasks(std::function<void()> callback);
+    void setOnAcknowledgeApprovals(std::function<void()> callback);
 
     /**
      * @brief Registers a callback to be called when the shutdown option is selected.
@@ -88,7 +91,10 @@ public:
     /**
      * @brief Invokes the acknowledgment callback, if set.
      */
-    void acknowledge();
+    void acknowledgeInbox();
+    void acknowledgeRequests();
+    void acknowledgeTasks();
+    void acknowledgeApprovals();
 
     /**
      * @brief Updates the tray icon tooltip based on request/task/approval counts.
@@ -102,9 +108,15 @@ private:
     HWND hwnd_; ///< Handle to the hidden window for message processing
     HINSTANCE hInstance_; /// Handle to the application instance.
     NOTIFYICONDATA nid_; /// Tray icon data structure.
-    std::function<void()> onAcknowledge_; /// Callback for when a notification is acknowledged.
+    std::function<void()> onAcknowledgeInbox_; /// Callback for when a notification is acknowledged (for Inbox).
+    std::function<void()> onAcknowledgeRequests_; /// Callback for when a notification is acknowledged (for Requests).
+    std::function<void()> onAcknowledgeTasks_; /// Callback for when a notification is acknowledged (for Tasks).
+    std::function<void()> onAcknowledgeApprovals_; /// Callback for when a notification is acknowledged (for Approvals).
     std::function<void()> onShutdown_; /// Callback for when the application is requested to shut down.
     std::function<void()> onUpdateConfig_; /// Callback for when the configuration should be updated.
+    int requests_ = 0;
+    int tasks_ = 0;
+    int approvals_ = 0;
 
     /**
      * @brief Creates the tray icon and registers it with the system.

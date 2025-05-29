@@ -51,7 +51,10 @@ bool ConfigManager::readConfig(std::string& errorMsg) {
     task_url_ = "https://" + ini_hostname + "/rest/" + ini_tenantId + "/ems/Task?layout=Id";
     approval_url_ = "https://" + ini_hostname + "/rest/" + ini_tenantId + "/ems/Task?layout=Id";
 
-    portalURL_ = "https://" + ini_hostname + "/home/inbox?TENANTID=" + ini_tenantId;
+    portalURLInbox_ = "https://" + ini_hostname + "/home/inbox?TENANTID=" + ini_tenantId;
+    portalURLRequests_ = "https://" + ini_hostname + "/saw/Requests?TENANTID=" + ini_tenantId;
+    portalURLTasks_ = "https://" + ini_hostname + "/home/tasks?TENANTID=" + ini_tenantId;
+    portalURLApprovals_ = "https://" + ini_hostname + "/home/approval?TENANTID=" + ini_tenantId;
 
     has_cfg_ = true;
 
@@ -107,9 +110,24 @@ std::string ConfigManager::getApprovalUrl() const {
     return approval_url_;
 }
 
-std::string ConfigManager::getPortalURL() const {
+std::string ConfigManager::getPortalURLInbox() const {
     std::lock_guard<std::mutex> lock(mtx_);
-    return portalURL_;
+    return portalURLInbox_;
+}
+
+std::string ConfigManager::getPortalURLRequests() const {
+    std::lock_guard<std::mutex> lock(mtx_);
+    return portalURLRequests_;
+}
+
+std::string ConfigManager::getPortalURLTasks() const {
+    std::lock_guard<std::mutex> lock(mtx_);
+    return portalURLTasks_;
+}
+
+std::string ConfigManager::getPortalURLApprovals() const {
+    std::lock_guard<std::mutex> lock(mtx_);
+    return portalURLApprovals_;
 }
 
 std::string ConfigManager::getUserName() const {

@@ -77,7 +77,10 @@ public:
      * @brief Gets the base portal URL.
      * @return The portal URL string.
      */
-    std::string getPortalURL() const;
+    std::string getPortalURLInbox() const;
+    std::string getPortalURLRequests() const;
+    std::string getPortalURLTasks() const;
+    std::string getPortalURLApprovals() const;
 
     /**
      * @brief Gets the username for API authentication.
@@ -158,7 +161,10 @@ private:
     std::string task_url_;         ///< URL to fetch request data from.
     std::string approval_url_;     ///< URL to fetch request data from.
 
-    std::string portalURL_;        ///< Base portal URL for link.
+    std::string portalURLInbox_;        ///< Base portal URL for link.
+    std::string portalURLRequests_;     ///< Base portal URL for link.
+    std::string portalURLTasks_;        ///< Base portal URL for link.
+    std::string portalURLApprovals_;    ///< Base portal URL for link.
     std::string userName_;         ///< User name used for API authentication or identification.
     std::string token_;            ///< API token for authorization.
     std::string request_filter_;   ///< Filter string for requests.

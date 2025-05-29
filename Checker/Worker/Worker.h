@@ -59,6 +59,22 @@ public:
      */
     bool isRunning() const;
 
+    FetchStats getFetchStats() const {
+        return fetchStats_;
+    }
+
+    void resetFetschStatsRequests () {
+        fetchStats_.requests = 0;
+    }
+
+    void resetFetschStatsTasks () {
+        fetchStats_.tasks = 0;
+    }
+
+    void resetFetschStatsApprovals () {
+        fetchStats_.approvals = 0;
+    }
+
 private:
     /**
      * @brief Main function executed by the background thread.

@@ -63,7 +63,10 @@ void Checker::start(HINSTANCE hInstance, const std::wstring& iniFile) {
 
     tray_ = std::make_unique<smax::TrayManager>();
     tray_->initialize(hInstance);
-    tray_->setOnAcknowledge([this]() { this->acknowledge(); });
+    tray_->setOnAcknowledgeInbox([this]() { this->acknowledgeInbox(); });
+    tray_->setOnAcknowledgeRequests([this]() { this->acknowledgeRequests(); });
+    tray_->setOnAcknowledgeTasks([this]() { this->acknowledgeTasks(); });
+    tray_->setOnAcknowledgeApprovals([this]() { this->acknowledgeApprovals(); });
     tray_->setOnShutdown([this]() { this->shutdown(); });
     tray_->setOnUpdateConfig([this]() { this->updateConfiguration(); });
 
@@ -95,22 +98,48 @@ void Checker::dismissAlert() {
     tray_->dismissAlert();
 }
 
-void Checker::acknowledge() {
+void smax::Checker::acknowledgeAndOpenURL(int requests, int tasks, int approvals, std::string (ConfigManager::*getUrlFunc)() const) {
     dismissAlert();
-    tray_->updateTooltip(0, 0, 0);
-    tray_->setIcon(LoadIcon(hInst_, MAKEINTRESOURCE(SMAX_TRAY_ICON_INIT)));
+    tray_->updateTooltip(requests, tasks, approvals);
+
+    if (requests == 0 && tasks == 0 && approvals == 0) {
+        tray_->setIcon(LoadIcon(hInst_, MAKEINTRESOURCE(SMAX_TRAY_ICON_INIT)));
+    }
 
     const auto& instance = Checker::getInstanceCreated();
 
-    if (instance.getConfig() == nullptr) {
+    const auto* config = instance.getConfig();
+    if (config == nullptr) {
         tray_->showErrorMessage(L"Error", L"Configuration not loaded.");
         return;
     }
 
-    const auto& portalURL = instance.getConfig()->getPortalURL();
+    const auto& portalURL = (config->*getUrlFunc)();
     auto wURL = std::wstring(portalURL.begin(), portalURL.end());
 
     tray_->openURLinBrowser(wURL);
+}
+
+void smax::Checker::acknowledgeInbox() {
+    acknowledgeAndOpenURL(0, 0, 0, &ConfigManager::getPortalURLInbox);
+}
+
+void smax::Checker::acknowledgeRequests() {
+    FetchStats stats = worker_->getFetchStats();
+    worker_->resetFetschStatsRequests();
+    acknowledgeAndOpenURL(0, stats.tasks, stats.approvals, &ConfigManager::getPortalURLRequests);
+}
+
+void smax::Checker::acknowledgeTasks() {
+    FetchStats stats = worker_->getFetchStats();
+    worker_->resetFetschStatsTasks();
+    acknowledgeAndOpenURL(stats.requests, 0, stats.approvals, &ConfigManager::getPortalURLTasks);
+}
+
+void smax::Checker::acknowledgeApprovals() {
+    FetchStats stats = worker_->getFetchStats();
+    worker_->resetFetschStatsApprovals();
+    acknowledgeAndOpenURL(stats.requests, stats.tasks, 0, &ConfigManager::getPortalURLApprovals);
 }
 
 void Checker::updateConfiguration() {
@@ -118,54 +147,6 @@ void Checker::updateConfiguration() {
 
     ConfigInitializer::UpdateINI(L"config.ini", decryptFunc_, encryptFunc_, utf8ToWideFunc_);
     readConfig();
-}
-
-LRESULT CALLBACK Checker::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-    std::wstring wURL;
-
-    switch (uMsg) {
-        case WM_USER + 1:
-            if (lParam == WM_RBUTTONUP) {
-                POINT pt;
-                GetCursorPos(&pt);
-                HMENU hMenu = CreatePopupMenu();
-                AppendMenu(hMenu, MF_STRING, 3, L"Settings");
-                AppendMenu(hMenu, MF_STRING, 2, L"Acknowledge");
-                AppendMenu(hMenu, MF_STRING, 1, L"Shut Down");
-
-                SetForegroundWindow(hwnd);
-                int cmd = TrackPopupMenu(hMenu, TPM_RETURNCMD | TPM_NONOTIFY, pt.x, pt.y, 0, hwnd, NULL);
-                DestroyMenu(hMenu);
-
-                if (cmd == 1) {
-                    PostMessage(hwnd, WM_CLOSE, 0, 0);
-                } else if (cmd == 2) {
-                    smax::Checker& instance = Checker::getInstanceCreated();
-                    
-                    const auto& portalURL = instance.getConfig()->getPortalURL();
-                    wURL = std::wstring(portalURL.begin(), portalURL.end());
-                    ShellExecute(hwnd, L"open", wURL.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
-                    instance.acknowledge();
-                } else if (cmd == 3) {
-                    smax::Checker& instance = Checker::getInstanceCreated();
-
-                    instance.updateConfiguration();
-                }
-            }
-            return 0;
-
-        case WM_CLOSE:
-            DestroyWindow(hwnd);
-            PostQuitMessage(0);
-            return 0;
-
-        case WM_DESTROY:
-            PostQuitMessage(0);
-            return 0;
-
-        default:
-            return DefWindowProc(hwnd, uMsg, wParam, lParam);
-    }
 }
 
 void Checker::readConfig() {

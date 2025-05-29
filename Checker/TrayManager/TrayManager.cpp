@@ -87,8 +87,18 @@ void TrayManager::dismissAlert() {
     Shell_NotifyIcon(NIM_MODIFY, &nid_);
 }
 
-void TrayManager::setOnAcknowledge(std::function<void()> callback) {
-    onAcknowledge_ = std::move(callback);
+void TrayManager::setOnAcknowledgeInbox(std::function<void()> callback) {
+    onAcknowledgeInbox_ = std::move(callback);
+}
+
+void TrayManager::setOnAcknowledgeRequests(std::function<void()> callback) {
+    onAcknowledgeRequests_ = std::move(callback);
+}
+void TrayManager::setOnAcknowledgeTasks(std::function<void()> callback) {
+    onAcknowledgeTasks_ = std::move(callback);
+}
+void TrayManager::setOnAcknowledgeApprovals(std::function<void()> callback) {
+    onAcknowledgeApprovals_ = std::move(callback);
 }
 
 void TrayManager::setOnShutdown(std::function<void()> callback) {
@@ -110,7 +120,20 @@ LRESULT CALLBACK TrayManager::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LP
             GetCursorPos(&pt);
             HMENU hMenu = CreatePopupMenu();
             AppendMenu(hMenu, MF_STRING, 1, L"Shut Down");
-            AppendMenu(hMenu, MF_STRING, 2, L"Acknowledge");
+            // AppendMenu(hMenu, MF_STRING, 2, L"Acknowledge");
+
+            HMENU hAcknowledgeMenu = CreatePopupMenu();
+            AppendMenu(hAcknowledgeMenu, MF_STRING, 1001, L"Inbox");
+
+            if (instance_->requests_ > 0)
+                AppendMenu(hAcknowledgeMenu, MF_STRING, 1002, L"Requests");
+            if (instance_->tasks_ > 0)
+                AppendMenu(hAcknowledgeMenu, MF_STRING, 1003, L"Tasks");
+            if (instance_->approvals_ > 0)
+                AppendMenu(hAcknowledgeMenu, MF_STRING, 1004, L"Approvals");
+
+            AppendMenu(hMenu, MF_POPUP, (UINT_PTR)hAcknowledgeMenu, L"Acknowledge");
+
             AppendMenu(hMenu, MF_STRING, 3, L"Settings");
 
             SetForegroundWindow(hwnd);
@@ -118,8 +141,18 @@ LRESULT CALLBACK TrayManager::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LP
             DestroyMenu(hMenu);
 
             if (cmd == 1 && instance_->onShutdown_) instance_->onShutdown_();
-            else if (cmd == 2 && instance_->onAcknowledge_) instance_->onAcknowledge_();
-            else if (cmd == 3 && instance_->onUpdateConfig_) instance_->onUpdateConfig_();
+            // else if (cmd == 2 && instance_->onAcknowledge_) instance_->onAcknowledge_();
+            else if (cmd == 1001 && instance_->onAcknowledgeInbox_) {
+                instance_->onAcknowledgeInbox_();
+            } else if (cmd == 1002 && instance_->onAcknowledgeRequests_) {
+                instance_->onAcknowledgeRequests_();
+            } else if (cmd == 1003 && instance_->onAcknowledgeTasks_) {
+                instance_->onAcknowledgeTasks_();
+            } else if (cmd == 1004 && instance_->onAcknowledgeApprovals_) {
+                instance_->onAcknowledgeApprovals_();
+            }  else if (cmd == 3 && instance_->onUpdateConfig_) instance_->onUpdateConfig_();
+
+
         }
         return 0;
     }
@@ -127,9 +160,31 @@ LRESULT CALLBACK TrayManager::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LP
     return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
-void TrayManager::acknowledge() {
-    if (onAcknowledge_) {
-        onAcknowledge_();
+void TrayManager::acknowledgeInbox() {
+    if (onAcknowledgeInbox_) {
+        onAcknowledgeInbox_();
+    }
+
+    dismissAlert();
+}
+
+void TrayManager::acknowledgeRequests() {
+    if (onAcknowledgeRequests_) {
+        onAcknowledgeRequests_();
+    }
+
+    dismissAlert();
+}
+void TrayManager::acknowledgeTasks() {
+    if (onAcknowledgeTasks_) {
+        onAcknowledgeTasks_();
+    }
+
+    dismissAlert();
+}
+void TrayManager::acknowledgeApprovals() {
+    if (onAcknowledgeApprovals_) {
+        onAcknowledgeApprovals_();
     }
 
     dismissAlert();
@@ -137,6 +192,10 @@ void TrayManager::acknowledge() {
 
 void TrayManager::updateTooltip(int requests, int tasks, int approvals) {
     std::wstring tooltip;
+
+    requests_ = requests;
+    tasks_ = tasks;
+    approvals_ = approvals;
 
     if (requests == 0 && tasks == 0 && approvals == 0) {
         tooltip = L"SMAX tray client";

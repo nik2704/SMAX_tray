@@ -59,7 +59,11 @@ public:
     /**
      * @brief Acknowledges and clears current notifications or events.
      */
-    void acknowledge();
+    void acknowledgeAndOpenURL(int requests, int tasks, int approvals, std::string (ConfigManager::*getUrlFunc)() const);
+    void acknowledgeInbox();
+    void acknowledgeRequests();
+    void acknowledgeTasks();
+    void acknowledgeApprovals();
 
     /**
      * @brief Updates currently used configuration in the INI file.
