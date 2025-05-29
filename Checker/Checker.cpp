@@ -97,6 +97,7 @@ void Checker::dismissAlert() {
 
 void Checker::acknowledge() {
     dismissAlert();
+    tray_->updateTooltip(0, 0, 0);
     tray_->setIcon(LoadIcon(hInst_, MAKEINTRESOURCE(SMAX_TRAY_ICON_INIT)));
 
     const auto& instance = Checker::getInstanceCreated();

@@ -39,7 +39,7 @@ bool ConfigManager::readConfig(std::string& errorMsg) {
 
     auto userNameHexW = ini.GetValue(instance, L"userName", L"");
     userName_ = decryptFunc_(userNameHexW);
-    
+
     request_filter_ = "Active=true and OwnedByPerson.Upn='" + userName_ + "'";
     task_filter_ = "PlatformTaskType='ManualTask' and PhaseId!='Completed' and PhaseId!='Failed' and PhaseId!='Cancel' and Assignee.Upn='" + userName_ + "'";
     approval_filter_ = "PlatformTaskType='Approval' and PhaseId='Pending' and Assignee.Upn='" + userName_ + "'";
@@ -51,13 +51,13 @@ bool ConfigManager::readConfig(std::string& errorMsg) {
     task_url_ = "https://" + ini_hostname + "/rest/" + ini_tenantId + "/ems/Task?layout=Id";
     approval_url_ = "https://" + ini_hostname + "/rest/" + ini_tenantId + "/ems/Task?layout=Id";
 
-    portalURL_ = "https://" + ini_hostname + "/saw/Requests?TENANTID=" + ini_tenantId;
+    portalURL_ = "https://" + ini_hostname + "/home/inbox?TENANTID=" + ini_tenantId;
 
     has_cfg_ = true;
 
-    check_requests_ = ini.GetBoolValue(L"Settings", L"check_requests", false);
-    check_tasks_ = ini.GetBoolValue(L"Settings", L"check_tasks", false);
-    check_approvals_ = ini.GetBoolValue(L"Settings", L"check_approvals", false);
+    check_requests_ = ini.GetBoolValue(instance, L"check_requests", false);
+    check_tasks_ = ini.GetBoolValue(instance, L"check_tasks", false);
+    check_approvals_ = ini.GetBoolValue(instance, L"check_approvals", false);
 
     return has_cfg_;
 }

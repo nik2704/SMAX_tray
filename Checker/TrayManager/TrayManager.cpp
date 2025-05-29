@@ -135,4 +135,31 @@ void TrayManager::acknowledge() {
     dismissAlert();
 }
 
+void TrayManager::updateTooltip(int requests, int tasks, int approvals) {
+    std::wstring tooltip;
+
+    if (requests == 0 && tasks == 0 && approvals == 0) {
+        tooltip = L"SMAX tray client";
+    } else {
+        if (requests > 0) {
+            tooltip += std::to_wstring(requests) + L" new request(s)";
+        }
+
+        if (tasks > 0) {
+            if (!tooltip.empty()) tooltip += L" • ";
+            tooltip += std::to_wstring(tasks) + L" new task(s)";
+        }
+
+        if (approvals > 0) {
+            if (!tooltip.empty()) tooltip += L" • ";
+            tooltip += std::to_wstring(approvals) + L" new approval(s)";
+        }
+    }
+
+    wcsncpy_s(nid_.szTip, tooltip.c_str(), _TRUNCATE);
+    nid_.uFlags |= NIF_TIP;
+    Shell_NotifyIcon(NIM_MODIFY, &nid_);
+}
+
+
 } // namespace smax

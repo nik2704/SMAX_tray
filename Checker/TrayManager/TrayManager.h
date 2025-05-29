@@ -90,6 +90,14 @@ public:
      */
     void acknowledge();
 
+    /**
+     * @brief Updates the tray icon tooltip based on request/task/approval counts.
+     * @param requests Number of new requests.
+     * @param tasks Number of new tasks.
+     * @param approvals Number of new approvals.
+     */
+    void updateTooltip(int requests, int tasks, int approvals);    
+
 private:
     HWND hwnd_; ///< Handle to the hidden window for message processing
     HINSTANCE hInstance_; /// Handle to the application instance.
