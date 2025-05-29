@@ -56,10 +56,22 @@ public:
     std::vector<std::string> getCustomerSections() const;
 
     /**
-     * @brief Gets the URL to fetch data from.
+     * @brief Gets the URL to fetch Request data from SMAX.
      * @return The URL string.
      */
-    std::string getUrl() const;
+    std::string getRequestUrl() const;
+
+    /**
+     * @brief Gets the URL to fetch Request data from SMAX.
+     * @return The URL string.
+     */
+    std::string getTaskUrl() const;
+
+    /**
+     * @brief Gets the URL to fetch Request data from SMAX.
+     * @return The URL string.
+     */
+    std::string getApprovalUrl() const;
 
     /**
      * @brief Gets the base portal URL.
@@ -83,7 +95,37 @@ public:
      * @brief Gets the optional filter string for requests.
      * @return The filter string.
      */
-    std::string getFilter() const;
+    std::string getRequestFilter() const;
+
+    /**
+     * @brief Gets the optional filter string for requests.
+     * @return The filter string.
+     */
+    std::string getTaskFilter() const;
+
+    /**
+     * @brief Gets the optional filter string for requests.
+     * @return The filter string.
+     */
+    std::string getApprovalFilter() const;
+    
+    /**
+     * @brief Checks if requests should be monitored.
+     * @return true if requests are to be checked, false otherwise.
+     */
+    bool getCheckRequests() const;
+
+    /**
+     * @brief Checks if tasks should be monitored.
+     * @return true if tasks are to be checked, false otherwise.
+     */
+    bool getCheckTasks() const;
+
+    /**
+     * @brief Checks if approvals should be monitored.
+     * @return true if approvals are to be checked, false otherwise.
+     */
+    bool getCheckApprovals() const;
 
     /**
      * @brief Gets the period in seconds between requests.
@@ -112,11 +154,21 @@ private:
     std::string iniFile_;          ///< Path to the INI configuration file.
     DecryptFunc decryptFunc_;      ///< Function to decrypt wide strings.
     Utf8Func utf8Func_;            ///< Function to convert wide strings to UTF-8.
-    std::string url_;              ///< URL to fetch data from.
+    std::string request_url_;      ///< URL to fetch request data from.
+    std::string task_url_;         ///< URL to fetch request data from.
+    std::string approval_url_;     ///< URL to fetch request data from.
+
     std::string portalURL_;        ///< Base portal URL for link.
     std::string userName_;         ///< User name used for API authentication or identification.
     std::string token_;            ///< API token for authorization.
-    std::string filter_;           ///< Optional filter string for requests.
+    std::string request_filter_;   ///< Filter string for requests.
+    std::string task_filter_;      ///< Filter string for tasks.
+    std::string approval_filter_;   ///< Filter string for approvals.
+
+    bool check_requests_ = false;   ///< Flag indicating if requests should be checked.
+    bool check_tasks_ = false;      /// Flag indicating if tasks should be checked.
+    bool check_approvals_ = false;  /// Flag indicating if approvals should be checked.
+
     int period_ = 60;              ///< Period in seconds between each request.
     bool has_cfg_ = false;         ///< Flag indicating if the configuration was successfully loaded.;
 

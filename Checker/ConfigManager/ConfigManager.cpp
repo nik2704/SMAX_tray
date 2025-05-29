@@ -39,15 +39,26 @@ bool ConfigManager::readConfig(std::string& errorMsg) {
 
     auto userNameHexW = ini.GetValue(instance, L"userName", L"");
     userName_ = decryptFunc_(userNameHexW);
-    filter_ = "Active=true and OwnedByPerson.Upn='" + userName_ + "'";
+    
+    request_filter_ = "Active=true and OwnedByPerson.Upn='" + userName_ + "'";
+    task_filter_ = "PlatformTaskType='ManualTask' and PhaseId!='Completed' and PhaseId!='Failed' and PhaseId!='Cancel' and Assignee.Upn='" + userName_ + "'";
+    approval_filter_ = "PlatformTaskType='Approval' and PhaseId='Pending' and Assignee.Upn='" + userName_ + "'";
 
     auto tokenHexW = ini.GetValue(instance, L"token", L"");
     token_ = decryptFunc_(tokenHexW);
 
-    url_ = "https://" + ini_hostname + "/rest/" + ini_tenantId + "/ems/Request?layout=Id";
+    request_url_ = "https://" + ini_hostname + "/rest/" + ini_tenantId + "/ems/Request?layout=Id";
+    task_url_ = "https://" + ini_hostname + "/rest/" + ini_tenantId + "/ems/Task?layout=Id";
+    approval_url_ = "https://" + ini_hostname + "/rest/" + ini_tenantId + "/ems/Task?layout=Id";
+
     portalURL_ = "https://" + ini_hostname + "/saw/Requests?TENANTID=" + ini_tenantId;
 
     has_cfg_ = true;
+
+    check_requests_ = ini.GetBoolValue(L"Settings", L"check_requests", false);
+    check_tasks_ = ini.GetBoolValue(L"Settings", L"check_tasks", false);
+    check_approvals_ = ini.GetBoolValue(L"Settings", L"check_approvals", false);
+
     return has_cfg_;
 }
 
@@ -81,9 +92,19 @@ std::vector<std::string> ConfigManager::getCustomerSections() const {
     return sections;
 }
 
-std::string ConfigManager::getUrl() const {
+std::string ConfigManager::getRequestUrl() const {
     std::lock_guard<std::mutex> lock(mtx_);
-    return url_;
+    return request_url_;
+}
+
+std::string ConfigManager::getTaskUrl() const {
+    std::lock_guard<std::mutex> lock(mtx_);
+    return task_url_;
+}
+
+std::string ConfigManager::getApprovalUrl() const {
+    std::lock_guard<std::mutex> lock(mtx_);
+    return approval_url_;
 }
 
 std::string ConfigManager::getPortalURL() const {
@@ -101,9 +122,34 @@ std::string ConfigManager::getToken() const {
     return token_;
 }
 
-std::string ConfigManager::getFilter() const {
+std::string ConfigManager::getRequestFilter() const {
     std::lock_guard<std::mutex> lock(mtx_);
-    return filter_;
+    return request_filter_;
+}
+
+std::string ConfigManager::getTaskFilter() const {
+    std::lock_guard<std::mutex> lock(mtx_);
+    return task_filter_;
+}
+
+std::string ConfigManager::getApprovalFilter() const {
+    std::lock_guard<std::mutex> lock(mtx_);
+    return approval_filter_;
+}
+
+bool ConfigManager::getCheckRequests() const {
+    std::lock_guard<std::mutex> lock(mtx_);
+    return check_requests_;
+}
+
+bool ConfigManager::getCheckTasks() const {
+    std::lock_guard<std::mutex> lock(mtx_);
+    return check_tasks_;
+}
+
+bool ConfigManager::getCheckApprovals() const {
+    std::lock_guard<std::mutex> lock(mtx_);
+    return check_approvals_;
 }
 
 int ConfigManager::getPeriod() const {
