@@ -16,6 +16,9 @@ struct InputFullData {
     wchar_t period[256];
     wchar_t username[256];
     wchar_t token[256];
+    int check_requests = 1;
+    int check_tasks = 1;
+    int check_approvals = 1;    
 };
 
 /**
