@@ -61,6 +61,7 @@ bool ConfigManager::readConfig(std::string& errorMsg) {
     check_requests_ = ini.GetBoolValue(instance, L"check_requests", false);
     check_tasks_ = ini.GetBoolValue(instance, L"check_tasks", false);
     check_approvals_ = ini.GetBoolValue(instance, L"check_approvals", false);
+    aviator_enabled_ = ini.GetBoolValue(instance, L"aviator_enabled", false);
 
     aviator_model_ = utf8Func_(ini.GetValue(L"Settings", L"aviator_model", L""));
     min_log_level_ = utf8Func_(ini.GetValue(L"Settings", L"min_log_level", L""));
@@ -184,6 +185,10 @@ std::string ConfigManager::getAviatorModel() {
 
 std::string ConfigManager::getMinLogLevel() {
     return min_log_level_;
+}
+
+bool ConfigManager::isAviatorEnabled() {
+    return aviator_enabled_;
 }
 
 } // namespace smax

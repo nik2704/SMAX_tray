@@ -91,6 +91,8 @@ private:
     
     Checker& operator=(const Checker&) = delete;    /// @brief Deleted assignment operator.
 
+    void setDinamicMenuOptions();
+
     /**
      * @brief Gracefully stop the checker and cleans up resources.
      */

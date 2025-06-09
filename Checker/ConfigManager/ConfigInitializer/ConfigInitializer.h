@@ -18,7 +18,8 @@ struct InputFullData {
     wchar_t token[256];
     int check_requests = 1;
     int check_tasks = 1;
-    int check_approvals = 1;    
+    int check_approvals = 1;
+    int aviator_enabled = 1;    
 };
 
 /**

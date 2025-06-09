@@ -54,6 +54,14 @@ std::string Checker::urlEncode(const std::string& value) {
     return escaped.str();
 }
 
+void Checker::setDinamicMenuOptions() {
+    if (!config_->getAviatorModel().empty() && config_->isAviatorEnabled()) {
+        tray_->setOnShowAviatorClient([this]() { });
+    } else{
+        tray_->setOnShowAviatorClient(nullptr);
+    }
+}
+
 void Checker::start(HINSTANCE hInstance, const std::wstring& iniFile) {
     if (worker_ || tray_ != nullptr) {
         return;
@@ -70,17 +78,19 @@ void Checker::start(HINSTANCE hInstance, const std::wstring& iniFile) {
     tray_->setOnAcknowledgeTasks([this]() { this->acknowledgeTasks(); });
     tray_->setOnAcknowledgeApprovals([this]() { this->acknowledgeApprovals(); });
     tray_->setOnShutdown([this]() { this->shutdown(); });
-    tray_->setOnUpdateConfig([this]() { this->updateConfiguration(); });
+    tray_->setOnUpdateConfig([this]() {
+        this->readConfig();
+        this->updateConfiguration();
+        this->setDinamicMenuOptions();
+    });
 
-    AppLogger::Logger::getInstance().setLogFile("smax_tray_client.log");
-    AppLogger::Logger::getInstance().setMinLogLevel("DEBUG");
-    AppLogger::Logger::getInstance().log(AppLogger::LOG_DEBUG, "Tray started.");
-    AppLogger::Logger::getInstance().log(AppLogger::LOG_DEBUG, "config_->getAviatorModel(): " + config_->getAviatorModel());
-    AppLogger::Logger::getInstance().log(AppLogger::LOG_DEBUG, "config_->getAviatorModel(): " + config_->getMinLogLevel());
+    // AppLogger::Logger::getInstance().setLogFile("smax_tray_client.log");
+    // AppLogger::Logger::getInstance().setMinLogLevel("DEBUG");
+    // AppLogger::Logger::getInstance().log(AppLogger::LOG_DEBUG, "Tray started.");
+    // AppLogger::Logger::getInstance().log(AppLogger::LOG_DEBUG, "config_->getAviatorModel(): " + config_->getAviatorModel());
+    // AppLogger::Logger::getInstance().log(AppLogger::LOG_DEBUG, "config_->getAviatorModel(): " + config_->getMinLogLevel());
 
-    if (!config_->getAviatorModel().empty()) {
-        tray_->setOnShowAviatorClient([this]() { });
-    }
+    setDinamicMenuOptions();
 
     tray_->setIcon(LoadIcon(hInstance, MAKEINTRESOURCE(SMAX_TRAY_ICON_INIT)));
 

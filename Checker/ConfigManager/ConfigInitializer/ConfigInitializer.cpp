@@ -23,6 +23,7 @@ INT_PTR CALLBACK FullInputDlgProc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM 
             CheckDlgButton(hwndDlg, 1006, input->check_requests ? BST_CHECKED : BST_UNCHECKED);
             CheckDlgButton(hwndDlg, 1007, input->check_tasks ? BST_CHECKED : BST_UNCHECKED);
             CheckDlgButton(hwndDlg, 1008, input->check_approvals ? BST_CHECKED : BST_UNCHECKED);
+            CheckDlgButton(hwndDlg, 1009, input->aviator_enabled ? BST_CHECKED : BST_UNCHECKED);
 
             return TRUE;
 
@@ -52,6 +53,7 @@ INT_PTR CALLBACK FullInputDlgProc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM 
                     input->check_requests  = (IsDlgButtonChecked(hwndDlg, 1006) == BST_CHECKED);
                     input->check_tasks     = (IsDlgButtonChecked(hwndDlg, 1007) == BST_CHECKED);
                     input->check_approvals = (IsDlgButtonChecked(hwndDlg, 1008) == BST_CHECKED);
+                    input->aviator_enabled = (IsDlgButtonChecked(hwndDlg, 1009) == BST_CHECKED);
 
                     EndDialog(hwndDlg, IDOK);
                     return TRUE;
@@ -102,6 +104,7 @@ bool ConfigInitializer::generateINI(const std::wstring& iniPath, EncryptFunc enc
     ini.SetValue(data.tenant, L"check_requests", data.check_requests ? L"1" : L"0");
     ini.SetValue(data.tenant, L"check_tasks", data.check_tasks ? L"1" : L"0");
     ini.SetValue(data.tenant, L"check_approvals", data.check_approvals ? L"1" : L"0");
+    ini.SetValue(data.tenant, L"aviator_enabled", data.aviator_enabled ? L"1" : L"0");
 
     return ini.SaveFile(iniPath.c_str()) >= 0;
 }
@@ -131,7 +134,8 @@ void ConfigInitializer::UpdateINI(const std::wstring& iniPath, DecryptFunc decry
     const wchar_t* token = ini.GetValue(tenant, L"token", L"");
     const wchar_t* val_requests = ini.GetValue(tenant, L"check_requests", L"1");
     const wchar_t* val_tasks = ini.GetValue(tenant, L"check_tasks", L"1");
-    const wchar_t* val_approvals = ini.GetValue(tenant, L"check_approvals", L"1");    
+    const wchar_t* val_approvals = ini.GetValue(tenant, L"check_approvals", L"1");
+    const wchar_t* val_aviator_enabled = ini.GetValue(tenant, L"aviator_enabled", L"1");
 
     std::wstring userName_encrypted_wstr(userName);
     std::wstring token_encrypted_wstr(token);
@@ -148,6 +152,7 @@ void ConfigInitializer::UpdateINI(const std::wstring& iniPath, DecryptFunc decry
     data.check_requests = wcscmp(val_requests, L"1") == 0 ? 1 : 0;
     data.check_tasks = wcscmp(val_tasks, L"1") == 0 ? 1 : 0;
     data.check_approvals = wcscmp(val_approvals, L"1") == 0 ? 1 : 0;
+    data.aviator_enabled = wcscmp(val_aviator_enabled, L"1") == 0 ? 1 : 0;
 
     INT_PTR result = DialogBoxParamW(hInstance, MAKEINTRESOURCE(102), NULL, FullInputDlgProc, reinterpret_cast<LPARAM>(&data));
     if (result != IDOK) return;
@@ -164,6 +169,7 @@ void ConfigInitializer::UpdateINI(const std::wstring& iniPath, DecryptFunc decry
     ini.SetValue(data.tenant, L"check_requests", data.check_requests ? L"1" : L"0");
     ini.SetValue(data.tenant, L"check_tasks", data.check_tasks ? L"1" : L"0");
     ini.SetValue(data.tenant, L"check_approvals", data.check_approvals ? L"1" : L"0");
+    ini.SetValue(data.tenant, L"aviator_enabled", data.aviator_enabled ? L"1" : L"0");
 
     if (ini.SaveFile(iniPath.c_str()) < 0) {
         MessageBoxW(NULL, L"Failed to save config file.", L"Error", MB_ICONERROR);

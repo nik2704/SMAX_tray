@@ -155,6 +155,8 @@ public:
      */
     std::string getAviatorModel();
 
+    bool isAviatorEnabled();
+
     /**
      * @brief Log model.
      * @return Log model.
@@ -188,6 +190,7 @@ private:
     bool check_requests_ = false;   ///< Flag indicating if requests should be checked.
     bool check_tasks_ = false;      /// Flag indicating if tasks should be checked.
     bool check_approvals_ = false;  /// Flag indicating if approvals should be checked.
+    bool aviator_enabled_ = false;  /// Flag if Aviator is ebabled.
 
     int period_ = 60;              ///< Period in seconds between each request.
     bool has_cfg_ = false;         ///< Flag indicating if the configuration was successfully loaded.;
