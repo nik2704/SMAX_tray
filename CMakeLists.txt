@@ -21,6 +21,12 @@ add_definitions(-DUNICODE -D_UNICODE)
 cmake_policy(SET CMP0144 NEW)  # New behavior for CMAKE_INSTALL_INCLUDEDIR etc.
 cmake_policy(SET CMP0167 OLD)  # Disable transitive LTO
 
+file(GLOB IMGUI_SRC
+    AviatorClient/libs/imgui/*.cpp
+    AviatorClient/libs/imgui/backends/imgui_impl_win32.cpp
+    AviatorClient/libs/imgui/backends/imgui_impl_opengl3.cpp
+)
+
 # Executable and source files
 add_executable(smax_tray_client WIN32
     main.cpp
@@ -37,6 +43,15 @@ add_executable(smax_tray_client WIN32
     libs/Logger/Logger.cpp
     Utils/Utils.cpp
     resources.rc
+
+    AviatorClient/src/ImGuiLayer.cpp
+    AviatorClient/src/ChatUI.cpp
+    AviatorClient/src/TextureLoader.cpp
+    AviatorClient/src/ConversationManager.cpp
+    AviatorClient/src/ChatController.cpp
+    AviatorClient/src/StringJSONextractor.cpp
+    AviatorClient/src/utils.cpp
+    ${IMGUI_SRC}
 )
 
 # Compiler and linker settings
@@ -53,10 +68,17 @@ target_include_directories(smax_tray_client PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/Worker
     ${CMAKE_CURRENT_SOURCE_DIR}/SimpleIni
     ${CMAKE_CURRENT_SOURCE_DIR}/Utils
+    ${CMAKE_CURRENT_SOURCE_DIR}/AviatorClient/assets
+    ${CMAKE_CURRENT_SOURCE_DIR}/AviatorClient/libs/imgui
+    ${CMAKE_CURRENT_SOURCE_DIR}/AviatorClient/libs/imgui/backends
+    ${CMAKE_CURRENT_SOURCE_DIR}/AviatorClient/libs/stb_image
+    ${CMAKE_CURRENT_SOURCE_DIR}/AviatorClient/includes
+    ${CMAKE_CURRENT_SOURCE_DIR}/AviatorClient/libs/NetworkClient
+    ${CMAKE_CURRENT_SOURCE_DIR}/AviatorClient/libs/JSONhelper    
 )
 
 # target_link_libraries(smax_tray_client PRIVATE crypt32 Shlwapi.lib)
-target_link_libraries(smax_tray_client PRIVATE crypt32 Shlwapi wininet)
+target_link_libraries(smax_tray_client PRIVATE opengl32 user32 gdi32 crypt32 Shlwapi wininet)
 
 set_target_properties(smax_tray_client PROPERTIES
     CXX_STANDARD 17

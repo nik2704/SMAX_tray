@@ -150,10 +150,13 @@ public:
     bool hasConfig() const;
 
     /**
-     * @brief Aviator model.
-     * @return Aviator model.
+     * @brief Aviator model, host, tenant_id, clinent (for conversation), tag(for conversation)
      */
     std::string getAviatorModel();
+    std::string getHost();
+    std::string getTenantId();
+    std::string getClient();
+    std::string getTag();
 
     bool isAviatorEnabled();
 
@@ -179,6 +182,10 @@ private:
     std::string portalURLRequests_;     ///< Base portal URL for link.
     std::string portalURLTasks_;        ///< Base portal URL for link.
     std::string portalURLApprovals_;    ///< Base portal URL for link.
+    std::string host_;
+    std::string tenant_id_;
+    std::string client_;
+    std::string tag_;
     std::string userName_;         ///< User name used for API authentication or identification.
     std::string token_;            ///< API token for authorization.
     std::string request_filter_;   ///< Filter string for requests.

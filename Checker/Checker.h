@@ -3,7 +3,8 @@
 
 #pragma once
 
-
+#include <thread>
+#include <atomic>
 #include "ConfigManager/ConfigManager.h"
 #include "TrayManager/TrayManager.h"
 #include "Worker/Worker.h"
@@ -134,6 +135,8 @@ private:
     WideToUtf8Func wideToUtf8Func_ = nullptr;           ///< Function to convert wide strings to UTF-8.    
     Utf8ToWideFunc utf8ToWideFunc_ = nullptr;           ///< Function to convert UTF-8 strings to wide.
     EncryptFunc encryptFunc_ = nullptr;     ///< Function to encrypt wide strings.
+    std::atomic<bool> aviatorAppRunning_ = false; ///< If Aviator client is running
+    std::thread aviatorThread_;           
 };
 
 } // namespace smax

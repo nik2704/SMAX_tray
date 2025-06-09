@@ -34,8 +34,10 @@ bool ConfigManager::readConfig(std::string& errorMsg) {
 
     auto instance = ini.GetValue(L"Settings", L"instance", L"");
 
-    auto ini_hostname = utf8Func_(ini.GetValue(instance, L"hostname", L""));
-    auto ini_tenantId = utf8Func_(ini.GetValue(instance, L"tenantId", L""));
+    host_ = utf8Func_(ini.GetValue(instance, L"hostname", L""));
+    tenant_id_ = utf8Func_(ini.GetValue(instance, L"tenantId", L""));
+    client_ = utf8Func_(ini.GetValue(instance, L"client", L""));
+    tag_ = utf8Func_(ini.GetValue(instance, L"tag", L""));
 
     auto userNameHexW = ini.GetValue(instance, L"userName", L"");
     userName_ = decryptFunc_(userNameHexW);
@@ -47,14 +49,14 @@ bool ConfigManager::readConfig(std::string& errorMsg) {
     auto tokenHexW = ini.GetValue(instance, L"token", L"");
     token_ = decryptFunc_(tokenHexW);
 
-    request_url_ = "https://" + ini_hostname + "/rest/" + ini_tenantId + "/ems/Request?layout=Id";
-    task_url_ = "https://" + ini_hostname + "/rest/" + ini_tenantId + "/ems/Task?layout=Id";
-    approval_url_ = "https://" + ini_hostname + "/rest/" + ini_tenantId + "/ems/Task?layout=Id";
+    request_url_ = "https://" + host_ + "/rest/" + tenant_id_ + "/ems/Request?layout=Id";
+    task_url_ = "https://" + host_ + "/rest/" + tenant_id_ + "/ems/Task?layout=Id";
+    approval_url_ = "https://" + host_ + "/rest/" + tenant_id_ + "/ems/Task?layout=Id";
 
-    portalURLInbox_ = "https://" + ini_hostname + "/home/inbox?TENANTID=" + ini_tenantId;
-    portalURLRequests_ = "https://" + ini_hostname + "/saw/Requests?TENANTID=" + ini_tenantId;
-    portalURLTasks_ = "https://" + ini_hostname + "/home/tasks?TENANTID=" + ini_tenantId;
-    portalURLApprovals_ = "https://" + ini_hostname + "/home/approval?TENANTID=" + ini_tenantId;
+    portalURLInbox_ = "https://" + host_ + "/home/inbox?TENANTID=" + tenant_id_;
+    portalURLRequests_ = "https://" + host_ + "/saw/Requests?TENANTID=" + tenant_id_;
+    portalURLTasks_ = "https://" + host_ + "/home/tasks?TENANTID=" + tenant_id_;
+    portalURLApprovals_ = "https://" + host_ + "/home/approval?TENANTID=" + tenant_id_;
 
     has_cfg_ = true;
 
@@ -189,6 +191,22 @@ std::string ConfigManager::getMinLogLevel() {
 
 bool ConfigManager::isAviatorEnabled() {
     return aviator_enabled_;
+}
+
+std::string ConfigManager::getHost() {
+    return host_;
+}
+
+std::string ConfigManager::getTenantId() {
+    return tenant_id_;
+}
+
+std::string ConfigManager::getClient() {
+    return client_;
+}
+
+std::string ConfigManager::getTag() {
+    return tag_;
 }
 
 } // namespace smax

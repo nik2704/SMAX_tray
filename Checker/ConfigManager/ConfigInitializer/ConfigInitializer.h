@@ -13,6 +13,8 @@ namespace smax {
 struct InputFullData {
     wchar_t hostname[256];
     wchar_t tenant[256];
+    wchar_t client[256];
+    wchar_t tag[256];
     wchar_t period[256];
     wchar_t username[256];
     wchar_t token[256];

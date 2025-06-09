@@ -1,4 +1,5 @@
 // Checker.cpp
+#include "../AviatorClient/includes/ImGuiLayer.h"
 #include "Checker.h"
 #include "../ConfigManager/ConfigInitializer/ConfigInitializer.h"
 #include "../libs/NetworkClient/NetworkClient.h"
@@ -56,7 +57,43 @@ std::string Checker::urlEncode(const std::string& value) {
 
 void Checker::setDinamicMenuOptions() {
     if (!config_->getAviatorModel().empty() && config_->isAviatorEnabled()) {
-        tray_->setOnShowAviatorClient([this]() { });
+        tray_->setOnShowAviatorClient([this]() {
+            if (aviatorAppRunning_) {
+                return;
+            }
+
+            if (this->config_->getHost().empty() ||
+                this->config_->getTenantId().empty() ||
+                this->config_->getClient().empty() ||
+                this->config_->getTag().empty() ||
+                this->config_->getAviatorModel().empty() ||
+                this->config_->getUserName().empty() ||
+                this->config_->getToken().empty()) {
+                    return;
+            }
+
+            aviatorAppRunning_ = true;
+
+            aviatorThread_ = std::thread([this]() {
+                ImGuiLayer app;
+                app.Run(
+                    hInst_,
+                    this->config_->getHost(),
+                    this->config_->getTenantId(),
+                    this->config_->getClient(),
+                    this->config_->getTag(),
+                    this->config_->getAviatorModel(),
+                    this->config_->getUserName(),
+                    this->config_->getToken(),
+                    this->config_->getMinLogLevel()
+                );
+
+                aviatorAppRunning_ = false;
+            });
+
+            
+            aviatorThread_.detach();
+        });
     } else{
         tray_->setOnShowAviatorClient(nullptr);
     }

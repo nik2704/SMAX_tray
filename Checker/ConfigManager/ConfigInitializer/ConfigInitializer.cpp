@@ -8,6 +8,8 @@ namespace smax {
 
 inline const wchar_t * DEFAULT_AVIATOR_MODEL = L"ESM-VIRTUAL-AGENT";
 inline const wchar_t * DEFAULT_LOG_LEVEL = L"ERROR";
+inline const wchar_t * DEFAULT_CLIENT = L"ESM";
+inline const wchar_t * DEFAULT_TAG = L"ESM_request";
 
 INT_PTR CALLBACK FullInputDlgProc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam) {
     static InputFullData* input = nullptr;
@@ -100,11 +102,12 @@ bool ConfigInitializer::generateINI(const std::wstring& iniPath, EncryptFunc enc
     ini.SetValue(data.tenant, L"tenantId", data.tenant);
     ini.SetValue(data.tenant, L"userName", encryptFunc(data.username).c_str());
     ini.SetValue(data.tenant, L"token", encryptFunc(data.token).c_str());
-
     ini.SetValue(data.tenant, L"check_requests", data.check_requests ? L"1" : L"0");
     ini.SetValue(data.tenant, L"check_tasks", data.check_tasks ? L"1" : L"0");
     ini.SetValue(data.tenant, L"check_approvals", data.check_approvals ? L"1" : L"0");
     ini.SetValue(data.tenant, L"aviator_enabled", data.aviator_enabled ? L"1" : L"0");
+    ini.SetValue(data.tenant, L"client", DEFAULT_CLIENT);
+    ini.SetValue(data.tenant, L"tag", DEFAULT_TAG);
 
     return ini.SaveFile(iniPath.c_str()) >= 0;
 }
@@ -170,6 +173,8 @@ void ConfigInitializer::UpdateINI(const std::wstring& iniPath, DecryptFunc decry
     ini.SetValue(data.tenant, L"check_tasks", data.check_tasks ? L"1" : L"0");
     ini.SetValue(data.tenant, L"check_approvals", data.check_approvals ? L"1" : L"0");
     ini.SetValue(data.tenant, L"aviator_enabled", data.aviator_enabled ? L"1" : L"0");
+    ini.SetValue(data.tenant, L"client", DEFAULT_CLIENT);
+    ini.SetValue(data.tenant, L"tag", DEFAULT_TAG);
 
     if (ini.SaveFile(iniPath.c_str()) < 0) {
         MessageBoxW(NULL, L"Failed to save config file.", L"Error", MB_ICONERROR);
