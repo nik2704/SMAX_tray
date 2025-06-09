@@ -27,13 +27,13 @@ add_executable(smax_tray_client WIN32
     Checker/ConfigManager/ConfigInitializer/ConfigInitializer.cpp
     Checker/ConfigManager/ConfigInitializer/ConfigInitializerDialog.rc    
     Checker/Checker.cpp
-    Checker/JSONhelper/json_builder.cpp
-    Checker/JSONhelper/json.cpp
-    Checker/JSONhelper/JSONhelper.cpp
-    Checker/NetworkClient/NetworkClient.cpp
     Checker/ConfigManager/ConfigManager.cpp
     Checker/TrayManager/TrayManager.cpp
     Checker/Worker/Worker.cpp
+    libs/JSONhelper/json_builder.cpp
+    libs/JSONhelper/json.cpp
+    libs/JSONhelper/JSONhelper.cpp
+    libs/NetworkClient/NetworkClient.cpp
     Utils/Utils.cpp
     resources.rc
 )

@@ -1,5 +1,5 @@
 #include "Worker.h"
-#include "../NetworkClient/NetworkClient.h"
+#include "../../libs/NetworkClient/NetworkClient.h"
 #include "../resource.h"
 #include <iomanip>
 #include <sstream>
@@ -135,8 +135,8 @@ void Worker::doNotification() {
 int Worker::sendGET(const std::string& url, std::set<std::string>& processedIDs) {
     auto result = NetworkClient::get(url, config_->getUserName(), config_->getToken());
 
-    if (result.has_value()) {
-        auto ids = NetworkClient::extractIDsFromJSON(result.value());
+    if (result.code == 200) {
+        auto ids = NetworkClient::extractIDsFromJSON(result.result);
         return updateProcessedIds(ids, processedIDs);
     } else {
         return -1;

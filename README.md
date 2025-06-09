@@ -17,12 +17,7 @@ smax_tray_client/
 ├── Utils
 |   ├── Utils.cpp
 |   ├── Utils.h
-├── Checker/
-|   ├── ConfigManager
-|   |   ├── ConfigInitializer
-|   |   |   ├── ConfigInitializer.h
-|   |   |   ├── ConfigInitializer.cpp
-|   |   |   └── ConfigInitializerDialog.rc
+├── libs/
 |   ├── JSONhelper
 |   |   ├── CMakeLists.txt
 |   |   ├── json_builder.h
@@ -34,6 +29,12 @@ smax_tray_client/
 |   ├── NetworkClient
 |   |   ├── NetworkClient.h
 |   |   └── NetworkClient.cpp
+├── Checker/
+|   ├── ConfigManager
+|   |   ├── ConfigInitializer
+|   |   |   ├── ConfigInitializer.h
+|   |   |   ├── ConfigInitializer.cpp
+|   |   |   └── ConfigInitializerDialog.rc
 |   ├── TrayManager
 |   |   ├── TrayManager.h
 |   |   └── TrayManager.cpp

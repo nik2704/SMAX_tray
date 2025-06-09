@@ -83,12 +83,11 @@ void Builder::AddValue(Node::Value value) {
     Node::Value& host_value = GetCurrentValue();
 
     if (std::holds_alternative<Array>(host_value)) {
-        Node& node = std::get<Array>(host_value).emplace_back(std::move(value));
-
-        nodes_stack_.push_back(&node);
-    } else {
-        AssertNewObjectContext();
+        std::get<Array>(host_value).emplace_back(std::move(value));
+    } else if (std::holds_alternative<std::nullptr_t>(host_value)) {
         host_value = std::move(value);
+    } else {
+        throw std::logic_error("Value already set for current node");
     }
 }
 
@@ -121,5 +120,8 @@ Builder::DictItemContext::DictItemContext(BaseContext base) : BaseContext(base) 
 
 // ------------------------ ArrayItemContext -------------------------------
 Builder::ArrayItemContext::ArrayItemContext(BaseContext base) : BaseContext(base) {}
-
+Builder::ArrayItemContext Builder::ArrayItemContext::Value(Node::Value value) {
+    builder_.AddValue(std::move(value));
+    return *this;
+}
 }  // namespace json

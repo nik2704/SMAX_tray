@@ -1,7 +1,7 @@
 // Checker.cpp
 #include "Checker.h"
 #include "../ConfigManager/ConfigInitializer/ConfigInitializer.h"
-#include "NetworkClient/NetworkClient.h"
+#include "../libs/NetworkClient/NetworkClient.h"
 #include "../resource.h"
 #include <sstream>
 #include <iomanip>

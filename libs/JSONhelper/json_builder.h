@@ -69,7 +69,7 @@ private:
         ArrayItemContext StartArray();
         BaseContext EndDict();
         BaseContext EndArray();
-    private:
+    protected:
         Builder& builder_;
     };
     
