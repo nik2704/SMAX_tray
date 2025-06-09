@@ -62,6 +62,9 @@ bool ConfigManager::readConfig(std::string& errorMsg) {
     check_tasks_ = ini.GetBoolValue(instance, L"check_tasks", false);
     check_approvals_ = ini.GetBoolValue(instance, L"check_approvals", false);
 
+    aviator_model_ = utf8Func_(ini.GetValue(L"Settings", L"aviator_model", L""));
+    min_log_level_ = utf8Func_(ini.GetValue(L"Settings", L"min_log_level", L""));
+
     return has_cfg_;
 }
 
@@ -173,6 +176,14 @@ bool ConfigManager::getCheckApprovals() const {
 int ConfigManager::getPeriod() const {
     std::lock_guard<std::mutex> lock(mtx_);
     return period_;
+}
+
+std::string ConfigManager::getAviatorModel() {
+    return aviator_model_;
+}
+
+std::string ConfigManager::getMinLogLevel() {
+    return min_log_level_;
 }
 
 } // namespace smax

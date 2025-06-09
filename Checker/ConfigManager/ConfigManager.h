@@ -149,6 +149,18 @@ public:
      */
     bool hasConfig() const;
 
+    /**
+     * @brief Aviator model.
+     * @return Aviator model.
+     */
+    std::string getAviatorModel();
+
+    /**
+     * @brief Log model.
+     * @return Log model.
+     */
+    std::string getMinLogLevel();
+
     // Disable copy construction and assignment
     ConfigManager(const ConfigManager&) = delete;
     ConfigManager& operator=(const ConfigManager&) = delete;    
@@ -170,6 +182,8 @@ private:
     std::string request_filter_;   ///< Filter string for requests.
     std::string task_filter_;      ///< Filter string for tasks.
     std::string approval_filter_;   ///< Filter string for approvals.
+    std::string aviator_model_;     ///< Supported only ESM-VIRTUAL-AGENT
+    std::string min_log_level_;      ///< Min legel for logging (CRITICAL, ERROR, DEBUG, INFO)
 
     bool check_requests_ = false;   ///< Flag indicating if requests should be checked.
     bool check_tasks_ = false;      /// Flag indicating if tasks should be checked.

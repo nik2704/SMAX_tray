@@ -109,6 +109,10 @@ void TrayManager::setOnUpdateConfig(std::function<void()> callback) {
     onUpdateConfig_ = std::move(callback);
 }
 
+void TrayManager::setOnShowAviatorClient(std::function<void()> callback) {
+    onShowAviatorClient_ = std::move(callback);
+}
+
 void TrayManager::openURLinBrowser(const std::wstring& url) {
     ShellExecute(nullptr, L"open", url.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
 }
@@ -132,9 +136,15 @@ LRESULT CALLBACK TrayManager::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LP
             if (instance_->approvals_ > 0)
                 AppendMenu(hAcknowledgeMenu, MF_STRING, 1004, L"Approvals");
 
+
             AppendMenu(hMenu, MF_POPUP, (UINT_PTR)hAcknowledgeMenu, L"Acknowledge");
 
             AppendMenu(hMenu, MF_STRING, 3, L"Settings");
+
+            if (instance_->onShowAviatorClient_) {
+                AppendMenu(hMenu, MF_SEPARATOR, 0, nullptr);
+                AppendMenu(hMenu, MF_STRING, 5, L"Aviator Client");
+            }            
 
             SetForegroundWindow(hwnd);
             int cmd = TrackPopupMenu(hMenu, TPM_RETURNCMD | TPM_NONOTIFY, pt.x, pt.y, 0, hwnd, NULL);
@@ -150,7 +160,11 @@ LRESULT CALLBACK TrayManager::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LP
                 instance_->onAcknowledgeTasks_();
             } else if (cmd == 1004 && instance_->onAcknowledgeApprovals_) {
                 instance_->onAcknowledgeApprovals_();
-            }  else if (cmd == 3 && instance_->onUpdateConfig_) instance_->onUpdateConfig_();
+            } else if (cmd == 3 && instance_->onUpdateConfig_) {
+                instance_->onUpdateConfig_();
+            } else if (cmd == 5 && instance_->onShowAviatorClient_) {
+                instance_->onShowAviatorClient_();
+            }
 
 
         }

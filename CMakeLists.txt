@@ -34,6 +34,7 @@ add_executable(smax_tray_client WIN32
     libs/JSONhelper/json.cpp
     libs/JSONhelper/JSONhelper.cpp
     libs/NetworkClient/NetworkClient.cpp
+    libs/Logger/Logger.cpp
     Utils/Utils.cpp
     resources.rc
 )

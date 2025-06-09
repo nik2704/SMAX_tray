@@ -6,6 +6,8 @@
 
 namespace smax {
 
+inline const wchar_t * DEFAULT_AVIATOR_MODEL = L"ESM-VIRTUAL-AGENT";
+inline const wchar_t * DEFAULT_LOG_LEVEL = L"ERROR";
 
 INT_PTR CALLBACK FullInputDlgProc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam) {
     static InputFullData* input = nullptr;
@@ -89,6 +91,8 @@ bool ConfigInitializer::generateINI(const std::wstring& iniPath, EncryptFunc enc
 
     ini.SetValue(L"Settings", L"instance", data.tenant);
     ini.SetValue(L"Settings", L"period", data.period);
+    ini.SetValue(L"Settings", L"aviator_model", DEFAULT_AVIATOR_MODEL);
+    ini.SetValue(L"Settings", L"min_log_level", DEFAULT_LOG_LEVEL);
 
     ini.SetValue(data.tenant, L"hostname", data.hostname);
     ini.SetValue(data.tenant, L"tenantId", data.tenant);
@@ -150,6 +154,8 @@ void ConfigInitializer::UpdateINI(const std::wstring& iniPath, DecryptFunc decry
 
     ini.SetValue(L"Settings", L"instance", data.tenant);
     ini.SetValue(L"Settings", L"period", data.period);
+    ini.SetValue(L"Settings", L"aviator_model", DEFAULT_AVIATOR_MODEL);
+    ini.SetValue(L"Settings", L"min_log_level", DEFAULT_LOG_LEVEL);
 
     ini.SetValue(data.tenant, L"hostname", data.hostname);
     ini.SetValue(data.tenant, L"tenantId", data.tenant);

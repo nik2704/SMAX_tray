@@ -69,6 +69,7 @@ public:
     void setOnAcknowledgeRequests(std::function<void()> callback);
     void setOnAcknowledgeTasks(std::function<void()> callback);
     void setOnAcknowledgeApprovals(std::function<void()> callback);
+    void setOnShowAviatorClient(std::function<void()> callback);
 
     /**
      * @brief Registers a callback to be called when the shutdown option is selected.
@@ -114,6 +115,7 @@ private:
     std::function<void()> onAcknowledgeApprovals_; /// Callback for when a notification is acknowledged (for Approvals).
     std::function<void()> onShutdown_; /// Callback for when the application is requested to shut down.
     std::function<void()> onUpdateConfig_; /// Callback for when the configuration should be updated.
+    std::function<void()> onShowAviatorClient_; /// Callback for when the configuration should be updated.
     int requests_ = 0;
     int tasks_ = 0;
     int approvals_ = 0;

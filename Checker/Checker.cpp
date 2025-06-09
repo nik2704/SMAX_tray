@@ -2,6 +2,8 @@
 #include "Checker.h"
 #include "../ConfigManager/ConfigInitializer/ConfigInitializer.h"
 #include "../libs/NetworkClient/NetworkClient.h"
+#include "../libs/Logger/Logger.h"
+
 #include "../resource.h"
 #include <sstream>
 #include <iomanip>
@@ -69,6 +71,16 @@ void Checker::start(HINSTANCE hInstance, const std::wstring& iniFile) {
     tray_->setOnAcknowledgeApprovals([this]() { this->acknowledgeApprovals(); });
     tray_->setOnShutdown([this]() { this->shutdown(); });
     tray_->setOnUpdateConfig([this]() { this->updateConfiguration(); });
+
+    AppLogger::Logger::getInstance().setLogFile("smax_tray_client.log");
+    AppLogger::Logger::getInstance().setMinLogLevel("DEBUG");
+    AppLogger::Logger::getInstance().log(AppLogger::LOG_DEBUG, "Tray started.");
+    AppLogger::Logger::getInstance().log(AppLogger::LOG_DEBUG, "config_->getAviatorModel(): " + config_->getAviatorModel());
+    AppLogger::Logger::getInstance().log(AppLogger::LOG_DEBUG, "config_->getAviatorModel(): " + config_->getMinLogLevel());
+
+    if (!config_->getAviatorModel().empty()) {
+        tray_->setOnShowAviatorClient([this]() { });
+    }
 
     tray_->setIcon(LoadIcon(hInstance, MAKEINTRESOURCE(SMAX_TRAY_ICON_INIT)));
 
