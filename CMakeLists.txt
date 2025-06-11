@@ -78,7 +78,9 @@ target_include_directories(smax_tray_client PRIVATE
 )
 
 # target_link_libraries(smax_tray_client PRIVATE crypt32 Shlwapi.lib)
-target_link_libraries(smax_tray_client PRIVATE opengl32 user32 gdi32 crypt32 Shlwapi wininet)
+# target_link_libraries(smax_tray_client PRIVATE opengl32 user32 gdi32 crypt32 Shlwapi wininet)
+target_link_libraries(smax_tray_client PRIVATE opengl32 user32 gdi32 crypt32 Shlwapi wininet dwmapi)
+
 
 set_target_properties(smax_tray_client PROPERTIES
     CXX_STANDARD 17

@@ -1,0 +1,3 @@
+[submodule "AviatorClient/libs/imgui"]
+    path = AviatorClient/libs/imgui
+    url = https://github.com/ocornut/imgui.git
