@@ -62,15 +62,12 @@ void Checker::setDinamicMenuOptions() {
     if (!config_->getAviatorModel().empty() && config_->isAviatorEnabled()) {
         tray_->setOnShowAviatorClient([this]() {
             bool expected = false;
-            // Try to atomically set aviatorAppRunning_ to true only if it was false
+
             if (!aviatorAppRunning_.compare_exchange_strong(expected, true, std::memory_order_acquire)) {
-                // If it was already true, just return. Log this to confirm it's not trying to re-initialize.
                 AppLogger::Logger::getInstance().log(AppLogger::LOG_INFO, "Aviator client already running, not launching a new instance.");
                 return;
             }
 
-            // Check if all necessary configuration parameters are available before launching.
-            // If not, clear the flag and return.
             if (this->config_->getHost().empty() ||
                 this->config_->getTenantId().empty() ||
                 this->config_->getClient().empty() ||
@@ -78,13 +75,12 @@ void Checker::setDinamicMenuOptions() {
                 this->config_->getAviatorModel().empty() ||
                 this->config_->getUserName().empty() ||
                 this->config_->getToken().empty()) {
-                // Clear the flag since we won't launch due to missing config.
+
                 AppLogger::Logger::getInstance().log(AppLogger::LOG_WARNING, "Missing configuration parameters for Aviator client. Not launching.");
                 aviatorAppRunning_.store(false, std::memory_order_release);
                 return;
             }
 
-            // Launch the ImGuiLayer application in a new, detached thread.
             aviatorThread_ = std::thread([this]() {
                 try {
                     ImGuiLayer::Instance().Run(
@@ -107,7 +103,6 @@ void Checker::setDinamicMenuOptions() {
             AppLogger::Logger::getInstance().log(AppLogger::LOG_INFO, "ImGuiLayer thread detached.");
         });
     } else {
-        // If Aviator model is empty or disabled, ensure the menu option is not set.
         tray_->setOnShowAviatorClient(nullptr);
         AppLogger::Logger::getInstance().log(AppLogger::LOG_INFO, "Aviator client option disabled (model empty or not enabled in config).");
     }

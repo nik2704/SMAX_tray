@@ -252,36 +252,6 @@ void ChatUI::AppendAssistantMessageSlowly(const std::string& full_text) {
 
 }
 
-// void ChatUI::RenderSendInput() {
-//     ImGuiInputTextFlags flags = ImGuiInputTextFlags_EnterReturnsTrue;
-//     ImGui::InputTextMultiline("##chat_input", inputBuffer_, sizeof(inputBuffer_), ImVec2(-1, 100), flags);
-
-//     if (loading_) {
-//         ImGui::BeginDisabled();
-//     }
-
-//     if ((ImGui::Button("Send") || (ImGui::IsItemFocused() && ImGui::IsKeyPressed(ImGuiKey_Enter))) 
-//         && strlen(inputBuffer_) > 0 && !loading_) {
-
-//         std::string user_input = inputBuffer_;
-
-//         {
-//             std::lock_guard<std::mutex> lock(messageMutex_);
-//             AddUserMessage(user_input);
-//             messages_.push_back({ generate_UUID_v4(), "", false, GetCurrentTimestamp() });
-//             loading_ = true;
-//         }
-
-//         inputBuffer_[0] = '\0';
-
-//         chat_controller_->sendChatMessage(user_input);
-//     }
-
-//     if (loading_) {
-//         ImGui::EndDisabled();
-//     }
-// }
-
 void ChatUI::RenderSendInput() {
     ImGuiInputTextFlags flags = ImGuiInputTextFlags_EnterReturnsTrue;
     ImGui::InputTextMultiline("##chat_input", inputBuffer_, sizeof(inputBuffer_), ImVec2(-1, 100), flags);
