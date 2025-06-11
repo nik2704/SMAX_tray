@@ -43,6 +43,8 @@ public:
         const std::string& min_log_level
     );
 
+    void OnWindowClose();
+
 private:
     ImGuiLayer() = default;
     ~ImGuiLayer() = default;

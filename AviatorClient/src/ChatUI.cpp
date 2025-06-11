@@ -7,7 +7,7 @@
 #include <random>
 #include <sstream>
 #include <iomanip>
-// #include "utils.h"
+
 
 namespace smax {
 
@@ -23,7 +23,8 @@ ChatUI::ChatUI(
     ImTextureID assistantAvatar,
     const std::string & min_log_level
 ) : userAvatar_(userAvatar), 
-    assistantAvatar_(assistantAvatar)
+    assistantAvatar_(assistantAvatar),
+    is_shutting_down_(false)
     {
         chat_controller_ = std::make_shared<smax::ChatController>(
             *this, host, tenant_id, client, tag, aviator_model, username, password, min_log_level
@@ -150,6 +151,7 @@ void ChatUI::RenderLinkPanel(float linkPanelWidth) {
 }
 
 void ChatUI::Render() {
+    is_shutting_down_ = false;
     SetupMainWindow();
 
     StartBackgroundLoadingIfNeeded();
@@ -235,6 +237,11 @@ void ChatUI::AppendAssistantMessageSlowly(const std::string& full_text) {
         std::string current_text;
 
         for (char c : full_text) {
+            if (is_shutting_down_) {
+                loading_ = false;
+                break;
+            }
+
             {
                 std::lock_guard<std::mutex> lock(messageMutex_);
                 current_text += c;
@@ -249,8 +256,8 @@ void ChatUI::AppendAssistantMessageSlowly(const std::string& full_text) {
 
         loading_ = false;
     }).detach();
-
 }
+
 
 void ChatUI::RenderSendInput() {
     ImGuiInputTextFlags flags = ImGuiInputTextFlags_EnterReturnsTrue;
@@ -364,6 +371,10 @@ void ChatUI::setLinks(const std::vector<smax::Link> &references) {
 void ChatUI::addLink(const smax::Link & link) {
     std::lock_guard<std::mutex> lock(linkMutex_);
     links_.push_back(link);
+}
+
+void ChatUI::setIsShuttingDown(bool isShuttingDown) {
+    is_shutting_down_ = isShuttingDown;
 }
 
 } // namespace smax

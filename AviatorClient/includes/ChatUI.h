@@ -132,6 +132,12 @@ public:
      */
     void switchOffLoadingFlag();
 
+    /**
+     * @brief Signals that Aviator client is being shutting down (to stop generative process if it works).
+     */
+    void setIsShuttingDown(bool isShuttingDown);
+    bool isShuttingDown() { return is_shutting_down_; }
+
 private:
     std::shared_ptr<ChatController> chat_controller_;  ///< Controller to manage backend logic.
     std::vector<MessageChat> messages_;                ///< Current chat message history.
@@ -151,6 +157,7 @@ private:
     std::mutex linkMutex_;                             ///< Mutex for concurrent link updates.
 
     std::atomic<bool> needsUpdate_ {false};            ///< Indicates if the UI needs re-rendering.
+    std::atomic<bool> is_shutting_down_{false};        ///< Indicates if the UI is shutting down.
 
     /**
      * @brief Initializes the layout and state of the main window.

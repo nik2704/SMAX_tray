@@ -99,6 +99,8 @@ void ChatController::sendChatMessage(const std::string & message) {
             std::string chunk;
             std::string error_message;
 
+            if (chatUI_.isShuttingDown()) return;
+
             auto data_extracted = StringJSONExtractor::getMessageFromBuffer(
                 host_,
                 tenant_id_,
@@ -114,6 +116,8 @@ void ChatController::sendChatMessage(const std::string & message) {
                 char_buffer += chunk;
             }
         });
+
+        if (chatUI_.isShuttingDown()) return;
 
         if (!char_buffer.empty()) {
             chatUI_.AppendAssistantMessageSlowly(char_buffer);

@@ -18,14 +18,22 @@ ImGuiLayer& ImGuiLayer::Instance() {
     return instance;
 }
 
+void ImGuiLayer::OnWindowClose() {
+    if (chat_ui_) {
+        chat_ui_->setIsShuttingDown(true);
+    }
+}
+
 // Win32 message handler
 extern LRESULT ImGui_ImplWin32_WndProcHandler(HWND, UINT, WPARAM, LPARAM);
+
 LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     if (ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam))
         return true;
 
     switch (msg) {
         case WM_CLOSE:
+            ImGuiLayer::Instance().OnWindowClose();
             DestroyWindow(hWnd);
             return 0;
         case WM_DESTROY:
@@ -131,7 +139,7 @@ bool ImGuiLayer::Init(
         (ImTextureID)(intptr_t)userAvatarTex,
         (ImTextureID)(intptr_t)botAvatarTex,
         min_log_level
-    );  
+    );
 
     return true;
 }

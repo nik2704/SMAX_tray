@@ -79,16 +79,29 @@ target_include_directories(smax_tray_client PRIVATE
 
 # ✅ Link against Windows system libraries (which are expected to be dynamic)
 # ❗ For MinGW, pthread must be added explicitly for static builds
-target_link_libraries(smax_tray_client PRIVATE
-    opengl32
-    user32
-    gdi32
-    crypt32
-    Shlwapi
-    wininet
-    dwmapi
-    pthread  # Needed for static libstdc++ and libgcc
-)
+if(MSVC)
+    target_link_libraries(smax_tray_client PRIVATE
+        opengl32
+        user32
+        gdi32
+        crypt32
+        Shlwapi
+        wininet
+        dwmapi
+    )
+else()
+    target_link_libraries(smax_tray_client PRIVATE
+        opengl32
+        user32
+        gdi32
+        crypt32
+        Shlwapi
+        wininet
+        dwmapi
+        pthread  # Only for MinGW or Linux
+    )
+endif()
+
 
 # ✅ Set C++ standard
 set_target_properties(smax_tray_client PROPERTIES
