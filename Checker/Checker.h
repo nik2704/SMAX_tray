@@ -125,6 +125,9 @@ private:
      * @brief Windows message handler for the hidden notification window.
      */
     static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    static void setRunning();
+    static void clearRunning();
+    static bool isRunning();
 
     std::wstring iniFile_;                  ///< Path to the INI configuration file.
     std::unique_ptr<TrayManager> tray_;     ///< Tray manager for system tray notifications.
@@ -135,7 +138,7 @@ private:
     WideToUtf8Func wideToUtf8Func_ = nullptr;           ///< Function to convert wide strings to UTF-8.    
     Utf8ToWideFunc utf8ToWideFunc_ = nullptr;           ///< Function to convert UTF-8 strings to wide.
     EncryptFunc encryptFunc_ = nullptr;     ///< Function to encrypt wide strings.
-    std::atomic<bool> aviatorAppRunning_ = false; ///< If Aviator client is running
+    static std::atomic<bool> aviatorAppRunning_; ///< If Aviator client is running
     std::thread aviatorThread_;           
 };
 

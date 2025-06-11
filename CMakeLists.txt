@@ -1,33 +1,36 @@
 cmake_minimum_required(VERSION 3.12)
 
-# Set version components
+# Project version
 set(PATCH_VERSION "1" CACHE INTERNAL "Patch version")
 set(PROJECT_VERSION 0.0.${PATCH_VERSION})
 
 project(smax_tray_client VERSION ${PROJECT_VERSION} LANGUAGES CXX)
 
-# ✅ Statically link the C++ runtime if using MSVC
+# ✅ Statically link the C++ runtime library depending on compiler
 if(MSVC)
+    # Use /MT or /MTd (Multithreaded static CRT for Release/Debug)
     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 else()
-    # ✅ Statically link C++ runtime and threading lib if using MinGW/GCC
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static -static-libgcc -static-libstdc++ -lpthread")
+    # ✅ For MinGW/GCC: statically link GCC, stdlib, and pthreads
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libgcc -static-libstdc++")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
 endif()
 
-
+# ✅ Unicode definitions for Windows API
 add_definitions(-DUNICODE -D_UNICODE)
 
-# CMake policies
-cmake_policy(SET CMP0144 NEW)  # New behavior for CMAKE_INSTALL_INCLUDEDIR etc.
-cmake_policy(SET CMP0167 OLD)  # Disable transitive LTO
+# CMake policies (CMP0144: control install include dir behavior, CMP0167: disable LTO propagation)
+cmake_policy(SET CMP0144 NEW)
+cmake_policy(SET CMP0167 OLD)
 
+# ✅ Collect Dear ImGui source files
 file(GLOB IMGUI_SRC
     AviatorClient/libs/imgui/*.cpp
     AviatorClient/libs/imgui/backends/imgui_impl_win32.cpp
     AviatorClient/libs/imgui/backends/imgui_impl_opengl3.cpp
 )
 
-# Executable and source files
+# ✅ Define the executable with source files
 add_executable(smax_tray_client WIN32
     main.cpp
     Checker/ConfigManager/ConfigInitializer/ConfigInitializer.cpp
@@ -54,10 +57,7 @@ add_executable(smax_tray_client WIN32
     ${IMGUI_SRC}
 )
 
-# Compiler and linker settings
-target_compile_definitions(smax_tray_client PRIVATE)
-
-# target_include_directories(smax_tray_client PRIVATE ${Boost_INCLUDE_DIRS})
+# ✅ Include directories
 target_include_directories(smax_tray_client PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/Checker
     ${CMAKE_CURRENT_SOURCE_DIR}/Checker/JSONhelper
@@ -77,20 +77,29 @@ target_include_directories(smax_tray_client PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/AviatorClient/libs/JSONhelper    
 )
 
-# target_link_libraries(smax_tray_client PRIVATE crypt32 Shlwapi.lib)
-# target_link_libraries(smax_tray_client PRIVATE opengl32 user32 gdi32 crypt32 Shlwapi wininet)
-target_link_libraries(smax_tray_client PRIVATE opengl32 user32 gdi32 crypt32 Shlwapi wininet dwmapi)
+# ✅ Link against Windows system libraries (which are expected to be dynamic)
+# ❗ For MinGW, pthread must be added explicitly for static builds
+target_link_libraries(smax_tray_client PRIVATE
+    opengl32
+    user32
+    gdi32
+    crypt32
+    Shlwapi
+    wininet
+    dwmapi
+    pthread  # Needed for static libstdc++ and libgcc
+)
 
-
+# ✅ Set C++ standard
 set_target_properties(smax_tray_client PROPERTIES
     CXX_STANDARD 17
     CXX_STANDARD_REQUIRED ON
 )
 
-# ✅ Define install location
+# ✅ Installation directory for the binary
 install(TARGETS smax_tray_client DESTINATION bin)
 
-#✅ NSIS Packaging (CPack)
+# ✅ NSIS Installer Packaging with CPack
 include(InstallRequiredSystemLibraries)
 
 set(CPACK_GENERATOR NSIS)
@@ -104,11 +113,12 @@ set(CPACK_PACKAGE_CONTACT "example@example.com")
 
 set(CPACK_NSIS_DISPLAY_NAME "SMAX Tray Client")
 set(CPACK_NSIS_PACKAGE_NAME "SMAX_Tray_Client")
-set(CPACK_NSIS_MUI_ICON "${CMAKE_CURRENT_SOURCE_DIR}/resources/icon.ico") # Optional
+set(CPACK_NSIS_MUI_ICON "${CMAKE_CURRENT_SOURCE_DIR}/resources/icon.ico") # Optional custom icon
 set(CPACK_NSIS_EXECUTABLES_DIRECTORY "bin")
 set(CPACK_NSIS_INSTALL_ROOT "$PROGRAMFILES64")
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "SMAX Tray Client")
 
+# Create desktop and start menu shortcuts
 set(CPACK_CREATE_DESKTOP_LINKS "smax_tray_client")
 set(CPACK_PACKAGE_EXECUTABLES "smax_tray_client" "SMAX Tray Client")
 

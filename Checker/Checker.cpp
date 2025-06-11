@@ -14,6 +14,8 @@
 
 namespace smax {
 
+std::atomic<bool> Checker::aviatorAppRunning_{false};
+
 Checker& Checker::getInstanceCreated() {
     return getInstance(nullptr, nullptr, nullptr, nullptr);
 }
@@ -55,13 +57,20 @@ std::string Checker::urlEncode(const std::string& value) {
     return escaped.str();
 }
 
+// In Checker.cpp
 void Checker::setDinamicMenuOptions() {
     if (!config_->getAviatorModel().empty() && config_->isAviatorEnabled()) {
         tray_->setOnShowAviatorClient([this]() {
-            if (aviatorAppRunning_) {
+            bool expected = false;
+            // Try to atomically set aviatorAppRunning_ to true only if it was false
+            if (!aviatorAppRunning_.compare_exchange_strong(expected, true, std::memory_order_acquire)) {
+                // If it was already true, just return. Log this to confirm it's not trying to re-initialize.
+                AppLogger::Logger::getInstance().log(AppLogger::LOG_INFO, "Aviator client already running, not launching a new instance.");
                 return;
             }
 
+            // Check if all necessary configuration parameters are available before launching.
+            // If not, clear the flag and return.
             if (this->config_->getHost().empty() ||
                 this->config_->getTenantId().empty() ||
                 this->config_->getClient().empty() ||
@@ -69,34 +78,51 @@ void Checker::setDinamicMenuOptions() {
                 this->config_->getAviatorModel().empty() ||
                 this->config_->getUserName().empty() ||
                 this->config_->getToken().empty()) {
-                    return;
+                // Clear the flag since we won't launch due to missing config.
+                AppLogger::Logger::getInstance().log(AppLogger::LOG_WARNING, "Missing configuration parameters for Aviator client. Not launching.");
+                aviatorAppRunning_.store(false, std::memory_order_release);
+                return;
             }
 
-            aviatorAppRunning_ = true;
-
+            // Launch the ImGuiLayer application in a new, detached thread.
             aviatorThread_ = std::thread([this]() {
-                ImGuiLayer app;
-                app.Run(
-                    hInst_,
-                    this->config_->getHost(),
-                    this->config_->getTenantId(),
-                    this->config_->getClient(),
-                    this->config_->getTag(),
-                    this->config_->getAviatorModel(),
-                    this->config_->getUserName(),
-                    this->config_->getToken(),
-                    this->config_->getMinLogLevel()
-                );
-
-                aviatorAppRunning_ = false;
+                try {
+                    ImGuiLayer::Instance().Run(
+                        hInst_,
+                        this->config_->getHost(),
+                        this->config_->getTenantId(),
+                        this->config_->getClient(),
+                        this->config_->getTag(),
+                        this->config_->getAviatorModel(),
+                        this->config_->getUserName(),
+                        this->config_->getToken(),
+                        this->config_->getMinLogLevel()
+                    );
+                } catch (const std::exception& e) {
+                    AppLogger::Logger::getInstance().log(AppLogger::LOG_ERROR, "Exception: " + std::string(e.what()));
+                }
+                aviatorAppRunning_.store(false, std::memory_order_release);
             });
-
-            
             aviatorThread_.detach();
+            AppLogger::Logger::getInstance().log(AppLogger::LOG_INFO, "ImGuiLayer thread detached.");
         });
-    } else{
+    } else {
+        // If Aviator model is empty or disabled, ensure the menu option is not set.
         tray_->setOnShowAviatorClient(nullptr);
+        AppLogger::Logger::getInstance().log(AppLogger::LOG_INFO, "Aviator client option disabled (model empty or not enabled in config).");
     }
+}
+
+void Checker::setRunning() {
+    aviatorAppRunning_.store(true, std::memory_order_release);
+}
+
+void Checker::clearRunning() {
+    aviatorAppRunning_.store(false, std::memory_order_release);
+}
+
+bool Checker::isRunning() {
+    return aviatorAppRunning_.load(std::memory_order_acquire);
 }
 
 void Checker::start(HINSTANCE hInstance, const std::wstring& iniFile) {
