@@ -27,7 +27,7 @@ class ChatUI;
  *
  * Handles user input, sends messages, manages conversations, and updates the UI.
  */
-class ChatController {
+class ChatController : public std::enable_shared_from_this<ChatController> {
 public:
     /**
      * @brief Constructs a ChatController with all necessary configuration parameters.
@@ -93,6 +93,7 @@ private:
     char inputBuffer_[2048]{};              ///< Input buffer for composing user messages.
 
     std::mutex chatMutex_;                  ///< Ensures thread-safe access to chat data.
+    std::atomic<bool> isChatSending_;
 
     /**
      * @brief Fills out contextual links in the UI from a list of references.

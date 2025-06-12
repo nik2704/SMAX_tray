@@ -35,6 +35,7 @@ ChatController::ChatController(
         password_,
         min_log_level_
     )
+    , isChatSending_(false)
 { }
 
 void ChatController::loadConversation() {
@@ -86,52 +87,66 @@ void ChatController::resetConversation() {
     topic_id_ = "";
 }
 
+void ChatController::sendChatMessage(const std::string& message) {
+    bool expected = false;
+    if (isChatSending_.compare_exchange_strong(expected, true)) {
+        // CRITICAL CHANGE: Capture a shared_ptr to 'this' to manage lifetime
+        std::shared_ptr<ChatController> self = shared_from_this();
 
-void ChatController::sendChatMessage(const std::string & message) {
-    std::thread([this, message]() {
-        std::string assistant_msg;
-        std::string char_buffer;
-        std::string error;
-        std::vector<Link> references;
+        std::thread([self, message]() {
+            std::string char_buffer;
+            std::string error;
+            std::vector<Link> references;
 
-        bool success = conversationManager_.chat(message, searchedContext_, last_message_, error, [&](const std::string& raw_data_block) {
-            std::lock_guard<std::mutex> lock(chatMutex_);
-            std::string chunk;
-            std::string error_message;
+            // All accesses to ChatController members MUST now use 'self->'
+            bool success = self->conversationManager_.chat(
+                message,
+                self->searchedContext_,
+                self->last_message_,
+                error,
+                [&](const std::string& raw_data_block) {
+                    // This inner lambda also implicitly captures 'self' because it uses
+                    // self->chatMutex_ and self->chatUI_. This is safe.
+                    std::lock_guard<std::mutex> lock(self->chatMutex_);
+                    std::string chunk;
+                    std::string error_message;
 
-            if (chatUI_.isShuttingDown()) return;
+                    if (self->chatUI_.isShuttingDown()) return; // Use self->
 
-            auto data_extracted = StringJSONExtractor::getMessageFromBuffer(
-                host_,
-                tenant_id_,
-                raw_data_block,
-                chunk,
-                searchedContext_,
-                last_message_,
-                references,
-                error_message
+                    auto data_extracted = StringJSONExtractor::getMessageFromBuffer(
+                        self->host_,           // Use self->
+                        self->tenant_id_,      // Use self->
+                        raw_data_block,
+                        chunk,
+                        self->searchedContext_, // Use self->
+                        self->last_message_,    // Use self->
+                        references,
+                        error_message
+                    );
+
+                    if (data_extracted) {
+                        char_buffer += chunk;
+                    }
+                }
             );
 
-            if (data_extracted) {
-                char_buffer += chunk;
+            if (self->chatUI_.isShuttingDown()) return; // Use self->
+
+            if (!char_buffer.empty()) {
+                self->chatUI_.AppendAssistantMessageSlowly(char_buffer); // Use self->
+
+                self->fillOutLinks(references); // Use self->
+            } else {
+                self->chatUI_.switchOffLoadingFlag(); // Use self->
             }
-        });
 
-        if (chatUI_.isShuttingDown()) return;
+            if (!success) {
+                self->chatUI_.setLastMessageTextError(error); // Use self->
+            }
 
-        if (!char_buffer.empty()) {
-            chatUI_.AppendAssistantMessageSlowly(char_buffer);
-            
-            fillOutLinks(references);
-        } else {
-            chatUI_.switchOffLoadingFlag();
-        }           
-
-        if (!success) {
-            chatUI_.setLastMessageTextError(error);
-        }
-
-    }).detach();
+            self->isChatSending_.store(false);
+        }).detach();
+    }
 }
 
 void ChatController::fillOutLinks(const std::vector<smax::Link> & references) {
